@@ -34,6 +34,10 @@ public class UserFollower {
     }
 
     @ManyToOne
-    @JoinColumn(name = "follower_id")
+    @JoinColumn(name = "account_id")
     private Account accounts;
+
+    @ManyToOne
+    @JoinColumn(name = "followed_id")
+    private Account followedAccounts;
 }
