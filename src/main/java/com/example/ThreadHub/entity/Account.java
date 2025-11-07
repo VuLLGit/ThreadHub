@@ -95,4 +95,189 @@ public class Account {
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications;
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public AccountRole getAccountRole() {
+        return accountRole;
+    }
+
+    public void setAccountRole(AccountRole accountRole) {
+        this.accountRole = accountRole;
+    }
+
+    public AccountStatus getAccountStatus() {
+        return accountStatus;
+    }
+
+    public void setAccountStatus(AccountStatus accountStatus) {
+        this.accountStatus = accountStatus;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
+    }
+
+    public String getGoogleAccessToken() {
+        return googleAccessToken;
+    }
+
+    public void setGoogleAccessToken(String googleAccessToken) {
+        this.googleAccessToken = googleAccessToken;
+    }
+
+    public String getGoogleRefreshToken() {
+        return googleRefreshToken;
+    }
+
+    public void setGoogleRefreshToken(String googleRefreshToken) {
+        this.googleRefreshToken = googleRefreshToken;
+    }
+
+    public Boolean getEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(Boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public String getEmailVerificationToken() {
+        return emailVerificationToken;
+    }
+
+    public void setEmailVerificationToken(String emailVerificationToken) {
+        this.emailVerificationToken = emailVerificationToken;
+    }
+
+    public LocalDateTime getEmailVerificationTokenSentAt() {
+        return emailVerificationTokenSentAt;
+    }
+
+    public void setEmailVerificationTokenSentAt(LocalDateTime emailVerificationTokenSentAt) {
+        this.emailVerificationTokenSentAt = emailVerificationTokenSentAt;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public List<CommunityMembership> getCommunityMemberships() {
+        return communityMemberships;
+    }
+
+    public void setCommunityMemberships(List<CommunityMembership> communityMemberships) {
+        this.communityMemberships = communityMemberships;
+    }
+
+    public List<Post> getPosts() {
+        return posts;
+    }
+
+    public void setPosts(List<Post> posts) {
+        this.posts = posts;
+    }
+
+    public List<Rate> getRates() {
+        return rates;
+    }
+
+    public void setRates(List<Rate> rates) {
+        this.rates = rates;
+    }
+
+    public List<Report> getReports() {
+        return reports;
+    }
+
+    public void setReports(List<Report> reports) {
+        this.reports = reports;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public List<PostFollower> getPostFollowers() {
+        return postFollowers;
+    }
+
+    public void setPostFollowers(List<PostFollower> postFollowers) {
+        this.postFollowers = postFollowers;
+    }
+
+    public List<UserFollower> getUserFollowers() {
+        return userFollowers;
+    }
+
+    public void setUserFollowers(List<UserFollower> userFollowers) {
+        this.userFollowers = userFollowers;
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<Notification> notifications) {
+        this.notifications = notifications;
+    }
 }
