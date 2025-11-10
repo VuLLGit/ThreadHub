@@ -18,7 +18,7 @@ public class CommunityMembership {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "community_id", nullable = false)
+    @Column(name = "community_role", nullable = false)
     private CommunityRole communityRole;
 
     @Column(name = "created_at")

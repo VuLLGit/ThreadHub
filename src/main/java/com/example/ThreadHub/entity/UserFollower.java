@@ -35,7 +35,7 @@ public class UserFollower {
 
     @ManyToOne
     @JoinColumn(name = "account_id")
-    private Account accounts;
+    private Account account;
 
     @ManyToOne
     @JoinColumn(name = "followed_id")
@@ -67,11 +67,11 @@ public class UserFollower {
     }
 
     public Account getAccounts() {
-        return accounts;
+        return account;
     }
 
     public void setAccounts(Account accounts) {
-        this.accounts = accounts;
+        this.account = accounts;
     }
 
     public Account getFollowedAccounts() {
