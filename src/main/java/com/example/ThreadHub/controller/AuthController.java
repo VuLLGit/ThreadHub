@@ -1,6 +1,6 @@
 package com.example.ThreadHub.controller;
 
-import com.example.ThreadHub.dto.RegisterRequestDTO;
+import com.example.ThreadHub.dto.request.RegisterRequest;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.enums.AccountRole;
 import com.example.ThreadHub.entity.enums.AccountStatus;
@@ -8,9 +8,11 @@ import com.example.ThreadHub.service.AccountService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,19 +26,28 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
-        if (!accountService.isUsernameAvailable(registerRequestDTO.getUsername())) {
-            return ResponseEntity.badRequest().body("Username is taken");
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest registerRequest, BindingResult bindingResult) {
+
+        // validate pattern
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+            return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        if (!accountService.isEmailAvailable(registerRequestDTO.getEmail())) {
+        // validate duplication
+        if (!accountService.isUsernameAvailable(registerRequest.getUsername())) {
+            return ResponseEntity.badRequest().body("Username is taken");
+        }
+        if (!accountService.isEmailAvailable(registerRequest.getEmail())) {
             return ResponseEntity.badRequest().body("Email is taken");
         }
 
         Account account = new Account();
-        account.setUsername(registerRequestDTO.getUsername());
-        account.setPassword(registerRequestDTO.getPassword());
-        account.setEmail(registerRequestDTO.getEmail());
+        account.setUsername(registerRequest.getUsername());
+        account.setPassword(registerRequest.getPassword());
+        account.setEmail(registerRequest.getEmail());
         account.setAccountRole(AccountRole.USER);
         account.setAccountStatus(AccountStatus.ACTIVE);
         account.setEmailVerified(false);
@@ -66,4 +77,18 @@ public class AuthController {
 
         return ResponseEntity.ok("Email verified successfully!");
     }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<String> resendVerificationEmail(@RequestParam("token") String token) {
+        Account account = accountService.findByEmailVerificationToken(token);
+
+        if (account == null) {
+            return ResponseEntity.badRequest().body("can't find account");
+        }
+
+        accountService.register(account);
+        return ResponseEntity.ok("please check your email to verify your account");
+    }
+
+    
 }

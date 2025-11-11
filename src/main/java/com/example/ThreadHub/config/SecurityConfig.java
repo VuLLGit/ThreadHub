@@ -15,10 +15,8 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Tắt CSRF cho API
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().authenticated() // Toàn bộ API yêu cầu đăng nhập
-                )
-                .httpBasic(Customizer.withDefaults()); // Thay thế httpBasic() cũ
-
+                        .anyRequest().permitAll()
+                );
         return http.build();
     }
 }

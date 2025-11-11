@@ -1,10 +1,9 @@
-package com.example.ThreadHub.dto;
+package com.example.ThreadHub.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import org.hibernate.validator.constraints.UniqueElements;
 
-public class RegisterRequestDTO {
+public class RegisterRequest {
     @NotBlank(message = "Username is required")
     private String username;
 
