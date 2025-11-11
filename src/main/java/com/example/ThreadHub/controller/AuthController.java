@@ -5,6 +5,8 @@ import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.enums.AccountRole;
 import com.example.ThreadHub.entity.enums.AccountStatus;
 import com.example.ThreadHub.service.AccountService;
+import com.example.ThreadHub.util.JwtUtil;
+import com.example.ThreadHub.util.PasswordHasher;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -46,7 +49,7 @@ public class AuthController {
 
         Account account = new Account();
         account.setUsername(registerRequest.getUsername());
-        account.setPassword(registerRequest.getPassword());
+        account.setPassword(PasswordHasher.hash(registerRequest.getPassword()));
         account.setEmail(registerRequest.getEmail());
         account.setAccountRole(AccountRole.USER);
         account.setAccountStatus(AccountStatus.ACTIVE);
@@ -90,5 +93,13 @@ public class AuthController {
         return ResponseEntity.ok("please check your email to verify your account");
     }
 
-    
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestParam("username") String username, @RequestParam("password") String password) {
+        Account account = accountService.login(username, password);
+        if (account == null) return ResponseEntity.badRequest().body("Invalid username or password");
+
+        String token = JwtUtil.generateToken(account);
+        return ResponseEntity.ok(Map.of("token", token));
+    }
+
 }

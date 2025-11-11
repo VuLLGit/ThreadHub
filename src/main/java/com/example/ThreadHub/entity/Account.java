@@ -6,8 +6,12 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -137,8 +141,8 @@ public class Account {
         this.avatarUrl = avatarUrl;
     }
 
-    public AccountRole getAccountRole() {
-        return accountRole;
+    public Collection<? extends GrantedAuthority> getAccountRoles() {
+        return Collections.singletonList(new SimpleGrantedAuthority(accountRole.name()));
     }
 
     public void setAccountRole(AccountRole accountRole) {

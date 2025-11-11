@@ -13,4 +13,8 @@ public interface AccountService {
     Account findByEmailVerificationToken(String token);
 
     void save(Account account);
+
+    Account login(String username, String password);
+
+    Account findByUsername(String username);
 }
