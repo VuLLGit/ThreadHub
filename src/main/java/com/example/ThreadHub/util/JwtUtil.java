@@ -8,7 +8,7 @@ import java.security.Key;
 import java.util.Date;
 
 public class JwtUtil {
-    private static final String SECRET = "12345678987654321";
+    private static final String SECRET = "jV0dVqz9M7h1fK3rP8s2W6x9Z4c1B7n0Q5t8L2y6R9u3E1a5C7k9M2p4T6v8X0z";
     private static final long EXPIRATION = 3600000; // 1 hour
 
     private static final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
