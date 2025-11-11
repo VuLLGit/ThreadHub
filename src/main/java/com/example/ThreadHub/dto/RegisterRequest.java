@@ -1,4 +1,4 @@
-package com.example.ThreadHub.dto.request;
+package com.example.ThreadHub.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -20,6 +20,8 @@ public class RegisterRequest {
             message = "Email is invalid"
     )
     private String email;
+
+    private String repeatPassword;
 
     //Getters and Setters
 
@@ -57,5 +59,13 @@ public class RegisterRequest {
             message = "Email is invalid"
     ) String email) {
         this.email = email;
+    }
+
+    public String getRepeatPassword() {
+        return repeatPassword;
+    }
+
+    public void setRepeatPassword(String repeatPassword) {
+        this.repeatPassword = repeatPassword;
     }
 }

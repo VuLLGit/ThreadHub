@@ -1,6 +1,7 @@
 package com.example.ThreadHub.controller;
 
-import com.example.ThreadHub.dto.request.RegisterRequest;
+import com.example.ThreadHub.dto.ChangePasswordRequest;
+import com.example.ThreadHub.dto.RegisterRequest;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.enums.AccountRole;
 import com.example.ThreadHub.entity.enums.AccountStatus;
@@ -10,9 +11,11 @@ import com.example.ThreadHub.util.PasswordHasher;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.Authenticator;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,6 +48,11 @@ public class AuthController {
         }
         if (!accountService.isEmailAvailable(registerRequest.getEmail())) {
             return ResponseEntity.badRequest().body("Email is taken");
+        }
+
+        // validate repeat password
+        if (!registerRequest.getPassword().equals(registerRequest.getRepeatPassword())) {
+            return ResponseEntity.badRequest().body("Password and repeat password must be the same");
         }
 
         Account account = new Account();
@@ -96,10 +104,55 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam("username") String username, @RequestParam("password") String password) {
         Account account = accountService.login(username, password);
+        System.out.println(PasswordHasher.hash(password));
         if (account == null) return ResponseEntity.badRequest().body("Invalid username or password");
 
         String token = JwtUtil.generateToken(account);
         return ResponseEntity.ok(Map.of("token", token));
     }
 
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestParam("email") String email) {
+        Account account = accountService.findByEmail(email);
+        if (account == null) return ResponseEntity.badRequest().body("can't find account");
+
+        accountService.forgotPassword(email);
+        return ResponseEntity.ok("new password has been sent to your email address");
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest changePasswordRequest,
+                                                 BindingResult bindingResult,
+                                                 Authentication authentication) {
+        // validate authentication
+        if (authentication == null) {
+            return ResponseEntity.badRequest().body("unauthorized");
+        }
+
+        // validate account exist
+        Account account = (Account) authentication.getPrincipal();
+
+        // validate old password
+        if (!PasswordHasher.hash(changePasswordRequest.getOldPassword()).equals(account.getPassword())) {
+            return ResponseEntity.badRequest().body("old password is incorrect");
+        }
+
+        // validate new password
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+            return ResponseEntity.badRequest().body(errorMessage);
+        }
+
+        // validate repeat password
+        if (!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getRepeatNewPassword())) {
+            return ResponseEntity.badRequest().body("new password and repeat new password must be the same");
+        }
+
+        account.setPassword(PasswordHasher.hash(changePasswordRequest.getNewPassword()));
+
+        accountService.save(account);
+        return ResponseEntity.ok("password changed successfully");
+    }
 }

@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface AccountRepository extends JpaRepository<Account, Long> {
     Account findByEmailVerificationToken(String token);
     Account findByUsername(String username);
+    Account findByEmail(String email);
 }

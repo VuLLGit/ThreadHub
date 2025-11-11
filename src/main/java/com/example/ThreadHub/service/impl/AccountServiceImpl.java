@@ -4,6 +4,7 @@ import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.repository.AccountRepository;
 import com.example.ThreadHub.service.AccountService;
 import com.example.ThreadHub.util.PasswordHasher;
+import com.example.ThreadHub.util.RandomPassword;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
@@ -80,5 +81,26 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account findByUsername(String username) {
         return accountRepository.findByUsername(username);
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        Account account = accountRepository.findByEmail(email);
+
+        String newPassword = RandomPassword.generate();
+        account.setPassword(PasswordHasher.hash(newPassword));
+        accountRepository.save(account);
+
+        // Send email verification
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Reset your password");
+        message.setText("Your password has been change to: " + newPassword + "\n please use this password to login and change it in your profile");
+        javaMailSender.send(message);
+    }
+
+    @Override
+    public Account findByEmail(String email) {
+        return accountRepository.findByEmail(email);
     }
 }

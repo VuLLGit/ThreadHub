@@ -17,4 +17,8 @@ public interface AccountService {
     Account login(String username, String password);
 
     Account findByUsername(String username);
+
+    void forgotPassword(String email);
+
+    Account findByEmail(String email);
 }
