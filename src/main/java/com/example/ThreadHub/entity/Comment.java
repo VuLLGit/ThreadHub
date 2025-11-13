@@ -1,5 +1,6 @@
 package com.example.ThreadHub.entity;
 
+import com.example.ThreadHub.entity.enums.CommentStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +21,9 @@ public class Comment {
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "comment_status", nullable = false)
+    private CommentStatus commentStatus;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -70,6 +74,14 @@ public class Comment {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public CommentStatus getCommentStatus() {
+        return commentStatus;
+    }
+
+    public void setCommentStatus(CommentStatus commentStatus) {
+        this.commentStatus = commentStatus;
     }
 
     public LocalDateTime getCreatedAt() {

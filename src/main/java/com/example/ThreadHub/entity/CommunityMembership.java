@@ -1,6 +1,7 @@
 package com.example.ThreadHub.entity;
 
-import com.example.ThreadHub.entity.enums.CommunityRole;
+import com.example.ThreadHub.entity.enums.MemberRole;
+import com.example.ThreadHub.entity.enums.MemberStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,8 +19,11 @@ public class CommunityMembership {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "community_role", nullable = false)
-    private CommunityRole communityRole;
+    @Column(name = "member_role", nullable = false)
+    private MemberRole memberRole;
+
+    @Column(name = "member_status", nullable = false)
+    private MemberStatus memberStatus;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -54,12 +58,20 @@ public class CommunityMembership {
         this.id = id;
     }
 
-    public CommunityRole getCommunityRole() {
-        return communityRole;
+    public MemberRole getMemberRole() {
+        return memberRole;
     }
 
-    public void setCommunityRole(CommunityRole communityRole) {
-        this.communityRole = communityRole;
+    public void setMemberRole(MemberRole memberRole) {
+        this.memberRole = memberRole;
+    }
+
+    public MemberStatus getMemberStatus() {
+        return memberStatus;
+    }
+
+    public void setMemberStatus(MemberStatus memberStatus) {
+        this.memberStatus = memberStatus;
     }
 
     public LocalDateTime getCreatedAt() {

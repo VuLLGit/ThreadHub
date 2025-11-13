@@ -1,7 +1,7 @@
 package com.example.ThreadHub.entity.enums;
 
 public enum CommunityStatus {
-    ACTIVE("Active"), INACTIVE("Inactive");
+    ACTIVE("Active"), INACTIVE("Inactive"), REMOVED_BY_ADMIN("Removed by ADMIN");
 
     private final String value;
 
