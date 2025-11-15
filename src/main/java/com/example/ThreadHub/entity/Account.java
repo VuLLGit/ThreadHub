@@ -77,7 +77,7 @@ public class Account {
     }
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CommunityMembership> communityMemberships;
+    private List<CommunityMember> communityMembers;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts;
@@ -221,12 +221,12 @@ public class Account {
         this.updatedAt = updatedAt;
     }
 
-    public List<CommunityMembership> getCommunityMemberships() {
-        return communityMemberships;
+    public List<CommunityMember> getCommunityMembers() {
+        return communityMembers;
     }
 
-    public void setCommunityMemberships(List<CommunityMembership> communityMemberships) {
-        this.communityMemberships = communityMemberships;
+    public void setCommunityMembers(List<CommunityMember> communityMembers) {
+        this.communityMembers = communityMembers;
     }
 
     public List<Post> getPosts() {

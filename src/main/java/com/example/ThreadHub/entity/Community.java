@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.security.core.parameters.P;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,11 +19,8 @@ public class Community {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
 
     @Column(name = "image_url")
     private String imageUrl;
@@ -49,7 +45,7 @@ public class Community {
     }
 
     @OneToMany(mappedBy = "community", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CommunityMembership> communityMemberships;
+    private List<CommunityMember> communityMembers;
 
     @OneToMany(mappedBy = "community", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts;
@@ -69,14 +65,6 @@ public class Community {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getImageUrl() {
@@ -111,12 +99,12 @@ public class Community {
         this.updatedAt = updatedAt;
     }
 
-    public List<CommunityMembership> getCommunityMemberships() {
-        return communityMemberships;
+    public List<CommunityMember> getCommunityMembers() {
+        return communityMembers;
     }
 
-    public void setCommunityMemberships(List<CommunityMembership> communityMemberships) {
-        this.communityMemberships = communityMemberships;
+    public void setCommunityMembers(List<CommunityMember> communityMembers) {
+        this.communityMembers = communityMembers;
     }
 
     public List<Post> getPosts() {
