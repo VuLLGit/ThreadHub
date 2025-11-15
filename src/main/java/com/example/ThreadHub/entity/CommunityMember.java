@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name = "community_memberships")
+@Table(name = "community_members")
 @AllArgsConstructor
 @NoArgsConstructor
-public class CommunityMembership {
+public class CommunityMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
