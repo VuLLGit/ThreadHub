@@ -1,4 +1,4 @@
-package com.example.ThreadHub.dto;
+package com.example.ThreadHub.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

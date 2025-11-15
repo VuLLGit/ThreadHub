@@ -1,10 +1,8 @@
 package com.example.ThreadHub.controller;
 
-import com.example.ThreadHub.dto.ChangePasswordRequest;
-import com.example.ThreadHub.dto.RegisterRequest;
+import com.example.ThreadHub.dto.request.ChangePasswordRequest;
+import com.example.ThreadHub.dto.request.RegisterRequest;
 import com.example.ThreadHub.entity.Account;
-import com.example.ThreadHub.entity.enums.AccountRole;
-import com.example.ThreadHub.entity.enums.AccountStatus;
 import com.example.ThreadHub.service.AccountService;
 import com.example.ThreadHub.util.JwtUtil;
 import com.example.ThreadHub.util.PasswordHasher;
@@ -15,7 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.Authenticator;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -55,15 +52,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Password and repeat password must be the same");
         }
 
-        Account account = new Account();
-        account.setUsername(registerRequest.getUsername());
-        account.setPassword(PasswordHasher.hash(registerRequest.getPassword()));
-        account.setEmail(registerRequest.getEmail());
-        account.setAccountRole(AccountRole.USER);
-        account.setAccountStatus(AccountStatus.ACTIVE);
-        account.setEmailVerified(false);
-
-        accountService.register(account);
+        accountService.register(registerRequest);
         return ResponseEntity.ok("please check your email to verify your account");
     }
 
@@ -81,10 +70,8 @@ public class AuthController {
         if (sentDate == null || sentDate.isBefore(now.minusHours(24))) {
             return ResponseEntity.badRequest().body("Verification link expired. Please request a new verification email.");
         }
-        
-        account.setEmailVerified(true);
-        account.setEmailVerificationToken(null); // clear token
-        accountService.save(account);
+
+        accountService.verifyEmail(account);
 
         return ResponseEntity.ok("Email verified successfully!");
     }
@@ -97,7 +84,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body("can't find account");
         }
 
-        accountService.register(account);
+        accountService.resendVerificationEmail(account);
         return ResponseEntity.ok("please check your email to verify your account");
     }
 
@@ -150,9 +137,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body("new password and repeat new password must be the same");
         }
 
-        account.setPassword(PasswordHasher.hash(changePasswordRequest.getNewPassword()));
-
-        accountService.save(account);
+        accountService.changePassword(account, changePasswordRequest.getNewPassword());
         return ResponseEntity.ok("password changed successfully");
     }
 }

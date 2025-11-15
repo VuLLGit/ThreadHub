@@ -1,5 +1,6 @@
 package com.example.ThreadHub.service;
 
+import com.example.ThreadHub.dto.request.RegisterRequest;
 import com.example.ThreadHub.entity.Account;
 
 public interface AccountService {
@@ -8,11 +9,15 @@ public interface AccountService {
 
     boolean isEmailAvailable(String email);
 
-    void register(Account account);
+    void register(RegisterRequest registerRequest);
 
     Account findByEmailVerificationToken(String token);
 
-    void save(Account account);
+    void resendVerificationEmail(Account account);
+    
+    void verifyEmail(Account account);
+
+    void changePassword(Account account, String newPassword);
 
     Account login(String username, String password);
 

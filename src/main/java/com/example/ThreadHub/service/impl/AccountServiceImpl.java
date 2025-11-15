@@ -1,6 +1,9 @@
 package com.example.ThreadHub.service.impl;
 
+import com.example.ThreadHub.dto.request.RegisterRequest;
 import com.example.ThreadHub.entity.Account;
+import com.example.ThreadHub.entity.enums.AccountRole;
+import com.example.ThreadHub.entity.enums.AccountStatus;
 import com.example.ThreadHub.repository.AccountRepository;
 import com.example.ThreadHub.service.AccountService;
 import com.example.ThreadHub.util.PasswordHasher;
@@ -37,8 +40,13 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void register(Account account) {
-        // Save account first
+    public void register(RegisterRequest registerRequest) {
+        Account account = new Account();
+        account.setUsername(registerRequest.getUsername());
+        account.setPassword(PasswordHasher.hash(registerRequest.getPassword()));
+        account.setEmail(registerRequest.getEmail());
+        account.setAccountRole(AccountRole.USER);
+        account.setAccountStatus(AccountStatus.ACTIVE);
         account.setEmailVerified(false);
 
         // Generate token
@@ -65,7 +73,35 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void save(Account account) {
+    public void resendVerificationEmail(Account account) {
+        // Generate token
+        String token = UUID.randomUUID().toString();
+        account.setEmailVerificationToken(token);
+        account.setEmailVerificationTokenSentAt(LocalDateTime.now());
+
+        accountRepository.save(account);
+
+        // Prepare verification link
+        String verifyLink = "http://localhost:8080/api/auth/verify?token=" + token;
+
+        // Send email verification
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(account.getEmail());
+        message.setSubject("Verify your email");
+        message.setText("Click the link to verify your account: " + verifyLink);
+        javaMailSender.send(message);
+    }
+
+    @Override
+    public void verifyEmail(Account account) {
+        account.setEmailVerified(true);
+        account.setEmailVerificationToken(null); // clear token
+        accountRepository.save(account);
+    }
+
+    @Override
+    public void changePassword(Account account, String newPassword) {
+        account.setPassword(PasswordHasher.hash(newPassword));
         accountRepository.save(account);
     }
 
