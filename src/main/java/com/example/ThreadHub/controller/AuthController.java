@@ -91,7 +91,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam("username") String username, @RequestParam("password") String password) {
         Account account = accountService.login(username, password);
-        System.out.println(PasswordHasher.hash(password));
         if (account == null) return ResponseEntity.badRequest().body("Invalid username or password");
 
         String token = JwtUtil.generateToken(account);
