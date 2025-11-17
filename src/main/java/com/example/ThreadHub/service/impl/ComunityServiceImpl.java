@@ -1,6 +1,6 @@
 package com.example.ThreadHub.service.impl;
 
-import com.example.ThreadHub.dto.request.CommunityRequest;
+import com.example.ThreadHub.dto.request.CreateCommunityRequest;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
 import com.example.ThreadHub.entity.CommunityMember;
@@ -32,10 +32,10 @@ public class ComunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public void createCommunity(CommunityRequest communityRequest, Account account) {
+    public void createCommunity(CreateCommunityRequest createCommunityRequest, Account account) {
         Community community = new Community();
-        community.setName(communityRequest.getName());
-        community.setImageUrl(communityRequest.getImageUrl());
+        community.setName(createCommunityRequest.getName());
+        community.setImageUrl(createCommunityRequest.getImageUrl());
         community.setCommunityStatus(CommunityStatus.ACTIVE);
         communityRepository.save(community);
 

@@ -1,6 +1,6 @@
 package com.example.ThreadHub.controller;
 
-import com.example.ThreadHub.dto.request.CommunityRequest;
+import com.example.ThreadHub.dto.request.CreateCommunityRequest;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.service.CommunityMemberService;
 import com.example.ThreadHub.service.CommunityService;
@@ -28,7 +28,7 @@ public class CommunityController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createCommunity(@Valid @RequestBody CommunityRequest communityRequest,
+    public ResponseEntity<?> createCommunity(@Valid @RequestBody CreateCommunityRequest createCommunityRequest,
                                              BindingResult bindingResult,
                                              Authentication authentication) {
         // validate authentication
@@ -44,10 +44,10 @@ public class CommunityController {
             return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        if (!comunityService.isNameAvailable(communityRequest.getName())) {
+        if (!comunityService.isNameAvailable(createCommunityRequest.getName())) {
             return ResponseEntity.badRequest().body("Community name already exists");
         }
-        comunityService.createCommunity(communityRequest, account);
+        comunityService.createCommunity(createCommunityRequest, account);
         return ResponseEntity.ok().body("Community created successfully");
     }
 
