@@ -9,4 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface CommunityMemberRepository extends JpaRepository<CommunityMember, Long> {
 
     Page<CommunityMember> findAllByCommunityId(Long communityId, Pageable pageable);
+
+    CommunityMember findByCommunityIdAndAccountId(Long communityId, Long accountId);
 }

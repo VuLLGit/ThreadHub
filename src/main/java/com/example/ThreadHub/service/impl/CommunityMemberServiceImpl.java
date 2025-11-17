@@ -6,7 +6,9 @@ import com.example.ThreadHub.entity.Community;
 import com.example.ThreadHub.entity.CommunityMember;
 import com.example.ThreadHub.entity.enums.MemberRole;
 import com.example.ThreadHub.entity.enums.MemberStatus;
+import com.example.ThreadHub.repository.AccountRepository;
 import com.example.ThreadHub.repository.CommunityMemberRepository;
+import com.example.ThreadHub.repository.CommunityRepository;
 import com.example.ThreadHub.service.CommunityMemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -19,10 +21,14 @@ import org.springframework.stereotype.Service;
 public class CommunityMemberServiceImpl implements CommunityMemberService {
 
     private final CommunityMemberRepository communityMemberRepository;
+    private final CommunityRepository communityRepository;
+    private final AccountRepository accountRepository;
 
     @Autowired
-    private CommunityMemberServiceImpl(CommunityMemberRepository communityMemberRepository) {
+    private CommunityMemberServiceImpl(CommunityMemberRepository communityMemberRepository, CommunityRepository communityRepository, AccountRepository accountRepository) {
         this.communityMemberRepository = communityMemberRepository;
+        this.communityRepository = communityRepository;
+        this.accountRepository = accountRepository;
     }
 
     @Override
@@ -44,11 +50,33 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
     }
 
     @Override
-    public void assignModerator(Community community, Account account) {
+    public boolean IsModerator(Long communityId, Long accountId) {
+        CommunityMember communityMember = communityMemberRepository.findByCommunityIdAndAccountId(communityId, accountId);
+        return communityMember.getMemberRole().equals(MemberRole.MODERATOR);
+    }
+
+    @Override
+    public void assignModerator(Long CommunityMemberId) {
+        CommunityMember communityMember = communityMemberRepository.findById(CommunityMemberId).orElseThrow();
+        communityMember.setMemberRole(MemberRole.MODERATOR);
+        communityMemberRepository.save(communityMember);
+    }
+
+    @Override
+    public void removeModerator(Long CommunityMemberId) {
+        CommunityMember communityMember = communityMemberRepository.findById(CommunityMemberId).orElseThrow();
+        communityMember.setMemberRole(MemberRole.MEMBER);
+        communityMemberRepository.save(communityMember);
+    }
+
+    @Override
+    public void joinCommunity(Long communityId, Long accountId) {
         CommunityMember communityMember = new CommunityMember();
+        Account account = accountRepository.findById(accountId).orElseThrow();
+        Community community = communityRepository.findById(communityId).orElseThrow();
         communityMember.setCommunity(community);
         communityMember.setAccount(account);
-        communityMember.setMemberRole(MemberRole.MODERATOR);
+        communityMember.setMemberRole(MemberRole.MEMBER);
         communityMember.setMemberStatus(MemberStatus.ACTIVE);
         communityMemberRepository.save(communityMember);
     }

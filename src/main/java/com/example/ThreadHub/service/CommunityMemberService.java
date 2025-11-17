@@ -9,5 +9,11 @@ public interface CommunityMemberService {
 
     Page<CommunityMemberResponse> getCommunityMembers(int page, int size, String sortBy, Long CommunityId);
 
-    void assignModerator(Community community, Account account);
+    boolean IsModerator(Long communityId, Long accountId);
+
+    void assignModerator(Long CommunityMemberId);
+
+    void removeModerator(Long CommunityMemberId);
+
+    void joinCommunity(Long communityId, Long accountId);
 }

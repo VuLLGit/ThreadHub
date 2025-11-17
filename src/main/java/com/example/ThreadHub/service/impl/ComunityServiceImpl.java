@@ -1,6 +1,7 @@
 package com.example.ThreadHub.service.impl;
 
 import com.example.ThreadHub.dto.request.CreateCommunityRequest;
+import com.example.ThreadHub.dto.request.UpdateCommunityRequest;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
 import com.example.ThreadHub.entity.CommunityMember;
@@ -45,5 +46,28 @@ public class ComunityServiceImpl implements CommunityService {
         communityMember.setMemberRole(MemberRole.MODERATOR);
         communityMember.setMemberStatus(MemberStatus.ACTIVE);
         communityMemberRepository.save(communityMember);
+    }
+
+    @Override
+    public void EditCommunity(UpdateCommunityRequest updateCommunityRequest, Long communityId) {
+        Community community = communityRepository.findById(communityId).orElseThrow();
+        community.setName(updateCommunityRequest.getName());
+        community.setImageUrl(updateCommunityRequest.getImageUrl());
+        community.setCommunityStatus(CommunityStatus.ACTIVE);
+        communityRepository.save(community);
+    }
+
+    @Override
+    public void inactivateCommunity(Long communityId) {
+        Community community = communityRepository.findById(communityId).orElseThrow();
+        community.setCommunityStatus(CommunityStatus.INACTIVE);
+        communityRepository.save(community);
+    }
+
+    @Override
+    public void activateCommunity(Long communityId) {
+        Community community = communityRepository.findById(communityId).orElseThrow();
+        community.setCommunityStatus(CommunityStatus.ACTIVE);
+        communityRepository.save(community);
     }
 }
