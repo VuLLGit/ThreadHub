@@ -3,14 +3,12 @@ package com.example.ThreadHub.entity;
 import com.example.ThreadHub.entity.enums.CommunityStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Data
 @Table(name = "communities")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,6 +23,7 @@ public class Community {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "community_status", nullable = false)
     private CommunityStatus communityStatus;
 

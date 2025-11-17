@@ -4,7 +4,6 @@ import com.example.ThreadHub.entity.enums.AccountRole;
 import com.example.ThreadHub.entity.enums.AccountStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,7 +14,6 @@ import java.util.Collections;
 import java.util.List;
 
 @Entity
-@Data
 @Table(name = "accounts")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,9 +34,11 @@ public class Account {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "account_role", nullable = false)
     private AccountRole accountRole;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "account_status", nullable = false)
     private AccountStatus accountStatus;
 
@@ -141,7 +141,7 @@ public class Account {
         this.avatarUrl = avatarUrl;
     }
 
-    public Collection<? extends GrantedAuthority> getAccountRoles() {
+    public Collection<? extends GrantedAuthority> getAccountRole() {
         return Collections.singletonList(new SimpleGrantedAuthority(accountRole.name()));
     }
 

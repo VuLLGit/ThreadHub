@@ -3,14 +3,12 @@ package com.example.ThreadHub.entity;
 import com.example.ThreadHub.entity.enums.PostStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Data
 @Table(name = "posts")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -25,6 +23,7 @@ public class Post {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "post_status", nullable = false)
     private PostStatus postStatus;
 

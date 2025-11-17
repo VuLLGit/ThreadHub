@@ -3,13 +3,11 @@ package com.example.ThreadHub.entity;
 import com.example.ThreadHub.entity.enums.MediaType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Data
 @Table(name = "medias")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -21,6 +19,7 @@ public class Media {
     @Column(nullable = false)
     private String url;
 
+    @Enumerated(EnumType.STRING)
     @Column( name = "media_type",nullable = false)
     private MediaType mediaType;
 
