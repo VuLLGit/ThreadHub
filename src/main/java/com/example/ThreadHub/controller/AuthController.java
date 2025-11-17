@@ -1,7 +1,6 @@
 package com.example.ThreadHub.controller;
 
-import com.example.ThreadHub.dto.request.ChangePasswordRequest;
-import com.example.ThreadHub.dto.request.RegisterRequest;
+import com.example.ThreadHub.dto.request.*;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.service.AccountService;
 import com.example.ThreadHub.util.JwtUtil;
@@ -29,9 +28,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest registerRequest, BindingResult bindingResult) {
-
-        // validate pattern
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest registerRequest,
+                                           BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String errorMessage = bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
@@ -65,9 +63,7 @@ public class AuthController {
         }
 
         LocalDateTime sentDate = account.getEmailVerificationTokenSentAt();
-        LocalDateTime now = LocalDateTime.now();
-
-        if (sentDate == null || sentDate.isBefore(now.minusHours(24))) {
+        if (sentDate == null || sentDate.isBefore(LocalDateTime.now().minusHours(24))) {
             return ResponseEntity.badRequest().body("Verification link expired. Please request a new verification email.");
         }
 
@@ -77,9 +73,9 @@ public class AuthController {
     }
 
     @PostMapping("/resend-verification")
-    public ResponseEntity<String> resendVerificationEmail(@RequestParam("token") String token) {
-        Account account = accountService.findByEmailVerificationToken(token);
+    public ResponseEntity<String> resendVerificationEmail(@RequestBody TokenRequest request) {
 
+        Account account = accountService.findByEmailVerificationToken(request.getToken());
         if (account == null) {
             return ResponseEntity.badRequest().body("can't find account");
         }
@@ -89,20 +85,40 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam("username") String username, @RequestParam("password") String password) {
-        Account account = accountService.login(username, password);
-        if (account == null) return ResponseEntity.badRequest().body("Invalid username or password");
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+            return ResponseEntity.badRequest().body(errorMessage);
+        }
+
+        Account account = accountService.login(request.getUsername(), request.getPassword());
+        if (account == null) {
+            return ResponseEntity.badRequest().body("Invalid username or password");
+        }
 
         String token = JwtUtil.generateToken(account);
         return ResponseEntity.ok(Map.of("token", token));
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestParam("email") String email) {
-        Account account = accountService.findByEmail(email);
-        if (account == null) return ResponseEntity.badRequest().body("can't find account");
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request,
+                                                 BindingResult bindingResult) {
 
-        accountService.forgotPassword(email);
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+            return ResponseEntity.badRequest().body(errorMessage);
+        }
+
+        Account account = accountService.findByEmail(request.getEmail());
+        if (account == null)
+            return ResponseEntity.badRequest().body("can't find account");
+
+        accountService.forgotPassword(request.getEmail());
         return ResponseEntity.ok("new password has been sent to your email address");
     }
 
