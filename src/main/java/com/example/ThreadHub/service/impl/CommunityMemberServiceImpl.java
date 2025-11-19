@@ -50,9 +50,26 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
     }
 
     @Override
-    public boolean IsModerator(Long communityId, Long accountId) {
-        CommunityMember communityMember = communityMemberRepository.findByCommunityIdAndAccountId(communityId, accountId);
+    public CommunityMember findByCommunityIdAndAccountId(Long CommunityId, Long accountId) {
+        return communityMemberRepository.findByCommunityIdAndAccountId(CommunityId, accountId);
+    }
+
+    @Override
+    public boolean isOwner(Long communityMemberId) {
+        CommunityMember communityMember = communityMemberRepository.findById(communityMemberId).orElseThrow();
+        return communityMember.getMemberRole().equals(MemberRole.OWNER);
+    }
+
+    @Override
+    public boolean isModerator(Long communityMemberId) {
+        CommunityMember communityMember = communityMemberRepository.findById(communityMemberId).orElseThrow();
         return communityMember.getMemberRole().equals(MemberRole.MODERATOR);
+    }
+
+    @Override
+    public boolean isMemberExist(Long communityMemberId) {
+        CommunityMember communityMember = communityMemberRepository.findById(communityMemberId).orElseThrow(null);
+        return communityMember != null;
     }
 
     @Override
@@ -70,6 +87,17 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
     }
 
     @Override
+    public void transferOwner(Long actorCommunityMemberId, Long newOwnerCommunityMemberId) {
+        CommunityMember newOwnerCommunityMember = communityMemberRepository.findById(newOwnerCommunityMemberId).orElseThrow();
+        newOwnerCommunityMember.setMemberRole(MemberRole.OWNER);
+        communityMemberRepository.save(newOwnerCommunityMember);
+
+        CommunityMember actorCommunityMember = communityMemberRepository.findById(actorCommunityMemberId).orElseThrow();
+        actorCommunityMember.setMemberRole(MemberRole.MODERATOR);
+        communityMemberRepository.save(actorCommunityMember);
+    }
+
+    @Override
     public void joinCommunity(Long communityId, Long accountId) {
         CommunityMember communityMember = new CommunityMember();
         Account account = accountRepository.findById(accountId).orElseThrow();
@@ -79,5 +107,11 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
         communityMember.setMemberRole(MemberRole.MEMBER);
         communityMember.setMemberStatus(MemberStatus.ACTIVE);
         communityMemberRepository.save(communityMember);
+    }
+
+    @Override
+    public void leaveCommunity(Long communityId, Long accountId) {
+        CommunityMember communityMember = communityMemberRepository.findByCommunityIdAndAccountId(communityId, accountId);
+        communityMemberRepository.delete(communityMember);
     }
 }

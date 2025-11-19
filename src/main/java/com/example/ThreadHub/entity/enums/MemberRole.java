@@ -1,7 +1,7 @@
 package com.example.ThreadHub.entity.enums;
 
 public enum MemberRole {
-    MODERATOR("Moderator"), MEMBER("Member");
+    MODERATOR("Moderator"), MEMBER("Member"), OWNER("Owner");
 
     private final String value;
 

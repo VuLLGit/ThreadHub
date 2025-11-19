@@ -43,7 +43,7 @@ public class ComunityServiceImpl implements CommunityService {
         CommunityMember communityMember = new CommunityMember();
         communityMember.setCommunity(community);
         communityMember.setAccount(account);
-        communityMember.setMemberRole(MemberRole.MODERATOR);
+        communityMember.setMemberRole(MemberRole.OWNER);
         communityMember.setMemberStatus(MemberStatus.ACTIVE);
         communityMemberRepository.save(communityMember);
     }
