@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CommunityMemberServiceImpl implements CommunityMemberService {
@@ -25,7 +26,7 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
     private final AccountRepository accountRepository;
 
     @Autowired
-    private CommunityMemberServiceImpl(CommunityMemberRepository communityMemberRepository, CommunityRepository communityRepository, AccountRepository accountRepository) {
+    public CommunityMemberServiceImpl(CommunityMemberRepository communityMemberRepository, CommunityRepository communityRepository, AccountRepository accountRepository) {
         this.communityMemberRepository = communityMemberRepository;
         this.communityRepository = communityRepository;
         this.accountRepository = accountRepository;
@@ -68,7 +69,7 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
 
     @Override
     public boolean isMemberExist(Long communityMemberId) {
-        CommunityMember communityMember = communityMemberRepository.findById(communityMemberId).orElseThrow(null);
+        CommunityMember communityMember = communityMemberRepository.findById(communityMemberId).orElse(null);
         return communityMember != null;
     }
 
@@ -110,8 +111,9 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
     }
 
     @Override
-    public void leaveCommunity(Long communityId, Long accountId) {
-        CommunityMember communityMember = communityMemberRepository.findByCommunityIdAndAccountId(communityId, accountId);
+    @Transactional
+    public void leaveCommunity(CommunityMember communityMember) {
         communityMemberRepository.delete(communityMember);
+        communityMemberRepository.flush();
     }
 }

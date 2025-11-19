@@ -21,7 +21,7 @@ public class ComunityServiceImpl implements CommunityService {
     private final CommunityMemberRepository communityMemberRepository;
 
     @Autowired
-    private ComunityServiceImpl(CommunityRepository communityRepository, CommunityMemberRepository communityMemberRepository) {
+    public ComunityServiceImpl(CommunityRepository communityRepository, CommunityMemberRepository communityMemberRepository) {
         this.communityRepository = communityRepository;
         this.communityMemberRepository = communityMemberRepository;
     }
@@ -30,6 +30,11 @@ public class ComunityServiceImpl implements CommunityService {
     public Boolean isNameAvailable(String name) {
         return communityRepository.findAll().stream()
                 .noneMatch(community -> community.getName().equals(name));
+    }
+
+    @Override
+    public Community getCommunityById(Long communityId) {
+        return communityRepository.findById(communityId).orElse(null);
     }
 
     @Override

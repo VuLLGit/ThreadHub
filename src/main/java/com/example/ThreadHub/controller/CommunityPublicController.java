@@ -2,7 +2,9 @@ package com.example.ThreadHub.controller;
 
 import com.example.ThreadHub.dto.request.CreateCommunityRequest;
 import com.example.ThreadHub.entity.Account;
+import com.example.ThreadHub.entity.Community;
 import com.example.ThreadHub.entity.CommunityMember;
+import com.example.ThreadHub.entity.enums.CommunityStatus;
 import com.example.ThreadHub.service.CommunityMemberService;
 import com.example.ThreadHub.service.CommunityService;
 import jakarta.validation.Valid;
@@ -22,7 +24,7 @@ public class CommunityPublicController {
     private CommunityMemberService communityMemberService;
 
     @Autowired
-    private CommunityPublicController(CommunityService comunityService, CommunityMemberService communityMemberService) {
+    public CommunityPublicController(CommunityService comunityService, CommunityMemberService communityMemberService) {
         this.comunityService = comunityService;
         this.communityMemberService = communityMemberService;
     }
@@ -58,6 +60,17 @@ public class CommunityPublicController {
             return ResponseEntity.badRequest().body("unauthorized");
         }
         Account account = (Account) authentication.getPrincipal();
+        CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
+        Community community = comunityService.getCommunityById(communityId);
+
+        if (community.getCommunityStatus() == CommunityStatus.INACTIVE) {
+            return ResponseEntity.badRequest().body("Community is inactive");
+        }
+
+        if (actorCommunityMember != null) {
+            return ResponseEntity.badRequest().body("You are already a member of this community");
+        }
+
         communityMemberService.joinCommunity(communityId, account.getId());
         return ResponseEntity.ok().body("Joined community successfully");
     }
@@ -71,11 +84,15 @@ public class CommunityPublicController {
         Account account = (Account) authentication.getPrincipal();
         CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
 
+        if (actorCommunityMember == null) {
+            return ResponseEntity.badRequest().body("You are not a member of this community");
+        }
+
         if (communityMemberService.isOwner(actorCommunityMember.getId())){
             return ResponseEntity.badRequest().body("You need to transfer Owner before leaving community");
         }
 
-        communityMemberService.leaveCommunity(communityId, account.getId());
+        communityMemberService.leaveCommunity(actorCommunityMember);
         return ResponseEntity.ok().body("Left community successfully");
     }
 }

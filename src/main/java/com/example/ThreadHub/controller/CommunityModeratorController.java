@@ -18,7 +18,7 @@ public class CommunityModeratorController {
     private CommunityMemberService communityMemberService;
 
     @Autowired
-    private CommunityModeratorController(CommunityService comunityService, CommunityMemberService communityMemberService) {
+    public CommunityModeratorController(CommunityService comunityService, CommunityMemberService communityMemberService) {
         this.comunityService = comunityService;
         this.communityMemberService = communityMemberService;
     }

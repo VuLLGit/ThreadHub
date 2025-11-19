@@ -26,5 +26,5 @@ public interface CommunityMemberService {
 
     void joinCommunity(Long communityId, Long accountId);
 
-    void leaveCommunity(Long communityId, Long accountId);
+    void leaveCommunity(CommunityMember communityMember);
 }
