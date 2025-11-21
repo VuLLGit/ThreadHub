@@ -1,19 +1,22 @@
 package com.example.ThreadHub.controller;
 
 import com.example.ThreadHub.dto.request.CreateCommunityRequest;
-import com.example.ThreadHub.entity.Account;
-import com.example.ThreadHub.entity.Community;
-import com.example.ThreadHub.entity.CommunityMember;
+import com.example.ThreadHub.dto.request.CreatePostRequest;
+import com.example.ThreadHub.entity.*;
 import com.example.ThreadHub.entity.enums.CommunityStatus;
 import com.example.ThreadHub.service.CommunityMemberService;
 import com.example.ThreadHub.service.CommunityService;
+import com.example.ThreadHub.service.PostService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -22,11 +25,13 @@ public class CommunityPublicController {
 
     private CommunityService comunityService;
     private CommunityMemberService communityMemberService;
+    private PostService postService;
 
     @Autowired
-    public CommunityPublicController(CommunityService comunityService, CommunityMemberService communityMemberService) {
+    public CommunityPublicController(CommunityService comunityService, CommunityMemberService communityMemberService, PostService postService) {
         this.comunityService = comunityService;
         this.communityMemberService = communityMemberService;
+        this.postService = postService;
     }
 
     @PostMapping("/create")
@@ -95,4 +100,32 @@ public class CommunityPublicController {
         communityMemberService.leaveCommunity(actorCommunityMember);
         return ResponseEntity.ok().body("Left community successfully");
     }
+
+    @PostMapping("/{communityId}/post/create")
+    public ResponseEntity<?> createPost(@RequestBody CreatePostRequest createPostRequest,
+                                        @PathVariable Long communityId,
+                                        Authentication authentication) {
+
+        if (authentication == null) {
+            return ResponseEntity.status(401).body("unauthorized");
+        }
+
+        Account account = (Account) authentication.getPrincipal();
+        Community community = comunityService.getCommunityById(communityId);
+
+        Post post = postService.createPost(createPostRequest, account, community);
+        
+        return ResponseEntity.ok(post);
+    }
+
+    @PostMapping("/post/{postId}/files")
+    public ResponseEntity<?> uploadPostFiles(@PathVariable Long postId,
+                                             @RequestPart("files") List<MultipartFile> files) {
+
+        Post post = postService.getPostById(postId);
+        List<Media> mediaList = postService.uploadFilesToPost(post, files);
+
+        return ResponseEntity.ok(mediaList);
+    }
+
 }

@@ -119,7 +119,7 @@ public class CommunityModeratorController {
             return ResponseEntity.status(403).body("Forbidden");
         }
 
-        comunityService.EditCommunity(updateCommunityRequest, communityId);
+        comunityService.editCommunity(updateCommunityRequest, communityId);
 
         return ResponseEntity.ok().body("Community edited successfully");
     }

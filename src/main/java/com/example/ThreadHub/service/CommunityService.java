@@ -9,11 +9,11 @@ public interface CommunityService {
 
     Boolean isNameAvailable(String name);
 
-    Community getCommunityById((Long communityId);
+    Community getCommunityById(Long communityId);
 
     void createCommunity(CreateCommunityRequest createCommunityRequest, Account account);
 
-    void EditCommunity(UpdateCommunityRequest uodateCommunityRequest, Long communityId);
+    void editCommunity(UpdateCommunityRequest uodateCommunityRequest, Long communityId);
 
     void inactivateCommunity(Long communityId);
 

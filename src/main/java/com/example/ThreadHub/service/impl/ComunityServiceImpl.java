@@ -54,7 +54,7 @@ public class ComunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public void EditCommunity(UpdateCommunityRequest updateCommunityRequest, Long communityId) {
+    public void editCommunity(UpdateCommunityRequest updateCommunityRequest, Long communityId) {
         Community community = communityRepository.findById(communityId).orElseThrow();
         community.setName(updateCommunityRequest.getName());
         community.setImageUrl(updateCommunityRequest.getImageUrl());
