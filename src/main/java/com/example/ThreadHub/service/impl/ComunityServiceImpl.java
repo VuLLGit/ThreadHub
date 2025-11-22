@@ -12,6 +12,7 @@ import com.example.ThreadHub.repository.CommunityMemberRepository;
 import com.example.ThreadHub.repository.CommunityRepository;
 import com.example.ThreadHub.service.CommunityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,8 +39,7 @@ public class ComunityServiceImpl implements CommunityService {
         return dto;
     }
 
-    @Override
-    public Boolean isNameAvailable(String name) {
+    private Boolean isNameAvailable(String name) {
         return communityRepository.findAll().stream()
                 .noneMatch(community -> community.getName().equals(name));
     }
@@ -51,6 +51,11 @@ public class ComunityServiceImpl implements CommunityService {
 
     @Override
     public CommunityResponse createCommunity(CommunityRequest communityRequest, Account account) {
+
+        if (!isNameAvailable(communityRequest.getName())) {
+            throw new RuntimeException("Community name already exists");
+        }
+
         Community community = new Community();
         community.setName(communityRequest.getName());
         community.setImageUrl(communityRequest.getImageUrl());

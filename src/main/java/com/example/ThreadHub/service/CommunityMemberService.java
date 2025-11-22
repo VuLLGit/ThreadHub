@@ -12,12 +12,6 @@ public interface CommunityMemberService {
 
     CommunityMember findByCommunityIdAndAccountId(Long CommunityId, Long accountId);
 
-    boolean isOwner(Long communityMemberId);
-
-    boolean isModerator(Long communityMemberId);
-
-    boolean isMemberExist(Long communityMemberId);
-
     CommunityMemberResponse assignModerator(Long communityMemberId);
 
     CommunityMemberResponse removeModerator(Long communityMemberId);
@@ -26,5 +20,5 @@ public interface CommunityMemberService {
 
     void joinCommunity(Long communityId, Long accountId);
 
-    void leaveCommunity(CommunityMember communityMember);
+    void leaveCommunity(Long communityId, Long accountId);
 }

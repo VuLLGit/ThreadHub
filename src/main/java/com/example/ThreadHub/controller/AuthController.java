@@ -37,50 +37,21 @@ public class AuthController {
             return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        // validate duplication
-        if (!accountService.isUsernameAvailable(registerRequest.getUsername())) {
-            return ResponseEntity.badRequest().body("Username is taken");
-        }
-        if (!accountService.isEmailAvailable(registerRequest.getEmail())) {
-            return ResponseEntity.badRequest().body("Email is taken");
-        }
-
-        // validate repeat password
-        if (!registerRequest.getPassword().equals(registerRequest.getRepeatPassword())) {
-            return ResponseEntity.badRequest().body("Password and repeat password must be the same");
-        }
-
         accountService.register(registerRequest);
         return ResponseEntity.ok("please check your email to verify your account");
     }
 
     @GetMapping("/verify")
     public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
-        Account account = accountService.findByEmailVerificationToken(token);
 
-        if (account == null) {
-            return ResponseEntity.badRequest().body("Invalid token");
-        }
-
-        LocalDateTime sentDate = account.getEmailVerificationTokenSentAt();
-        if (sentDate == null || sentDate.isBefore(LocalDateTime.now().minusHours(24))) {
-            return ResponseEntity.badRequest().body("Verification link expired. Please request a new verification email.");
-        }
-
-        accountService.verifyEmail(account);
-
+        accountService.verifyEmail(token);
         return ResponseEntity.ok("Email verified successfully!");
     }
 
     @PostMapping("/resend-verification")
     public ResponseEntity<String> resendVerificationEmail(@RequestBody TokenRequest request) {
 
-        Account account = accountService.findByEmailVerificationToken(request.getToken());
-        if (account == null) {
-            return ResponseEntity.badRequest().body("can't find account");
-        }
-
-        accountService.resendVerificationEmail(account);
+        accountService.resendVerificationEmail(request.getToken());
         return ResponseEntity.ok("please check your email to verify your account");
     }
 
@@ -95,12 +66,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        Account account = accountService.login(request.getUsername(), request.getPassword());
-        if (account == null) {
-            return ResponseEntity.badRequest().body("Invalid username or password");
-        }
-
-        String token = JwtUtil.generateToken(account);
+        String token = accountService.login(request.getUsername(), request.getPassword());
         return ResponseEntity.ok(Map.of("token", token));
     }
 
@@ -115,10 +81,6 @@ public class AuthController {
             return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        Account account = accountService.findByEmail(request.getEmail());
-        if (account == null)
-            return ResponseEntity.badRequest().body("can't find account");
-
         accountService.forgotPassword(request.getEmail());
         return ResponseEntity.ok("new password has been sent to your email address");
     }
@@ -131,14 +93,7 @@ public class AuthController {
         if (authentication == null) {
             return ResponseEntity.badRequest().body("unauthorized");
         }
-
-        // validate account exist
         Account account = (Account) authentication.getPrincipal();
-
-        // validate old password
-        if (!PasswordHasher.hash(changePasswordRequest.getOldPassword()).equals(account.getPassword())) {
-            return ResponseEntity.badRequest().body("old password is incorrect");
-        }
 
         // validate new password
         if (bindingResult.hasErrors()) {
@@ -148,12 +103,7 @@ public class AuthController {
             return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        // validate repeat password
-        if (!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getRepeatNewPassword())) {
-            return ResponseEntity.badRequest().body("new password and repeat new password must be the same");
-        }
-
-        accountService.changePassword(account, changePasswordRequest.getNewPassword());
+        accountService.changePassword(account, changePasswordRequest.getNewPassword(), changePasswordRequest.getRepeatNewPassword());
         return ResponseEntity.ok("password changed successfully");
     }
 }

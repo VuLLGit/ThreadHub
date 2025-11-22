@@ -12,6 +12,7 @@ import com.example.ThreadHub.repository.CommunityRepository;
 import com.example.ThreadHub.repository.PostRepository;
 import com.example.ThreadHub.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -92,13 +93,30 @@ public class PostServiceImpl implements PostService {
         return postResponse;
     }
 
+    private void saveMedias(Post post, List<MultipartFile> files, List<Media> mediaList) {
+        for (MultipartFile file : files) {
+            String url = saveFileToS3(file, "posts/");
+
+            Media media = new Media();
+            media.setUrl(url);
+            media.setPost(post);
+
+            if (file.getContentType() != null && file.getContentType().startsWith("image")) {
+                media.setMediaType(MediaType.IMAGE);
+            } else {
+                media.setMediaType(MediaType.VIDEO);
+            }
+
+            mediaList.add(media);
+        }
+    }
+
     @Override
     public Post getPostById(Long id) {
         return postRepository.findById(id).orElse(null);
     }
 
     @Override
-    @Transactional
     public PostResponse createPost(PostRequest postRequest, Account account, Community community) {
         Post post = new Post();
         post.setTitle(postRequest.getTitle());
@@ -111,31 +129,77 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional
     public PostResponse uploadFilesToPost(Post post, List<MultipartFile> files) {
         List<Media> mediaList = new ArrayList<>();
 
         if (files != null && !files.isEmpty()) {
-            for (MultipartFile file : files) {
-                String url = saveFileToS3(file, "posts/");
-
-                Media media = new Media();
-                media.setUrl(url);
-                media.setPost(post);
-
-                if (file.getContentType() != null && file.getContentType().startsWith("image")) {
-                    media.setMediaType(MediaType.IMAGE);
-                } else {
-                    media.setMediaType(MediaType.VIDEO);
-                }
-
-                mediaList.add(media);
-            }
+            saveMedias(post, files, mediaList);
         }
 
         post.getMedias().addAll(mediaList);
         postRepository.save(post);
 
         return mapToDto(post);
+    }
+
+    @Override
+    public PostResponse editPost(Account account, Post post, PostRequest postRequest) {
+        if (!post.getAccount().getId().equals(account.getId())) {
+            throw new RuntimeException("You don't have permission to edit this post");
+        }
+
+        post.setTitle(postRequest.getTitle());
+        post.setContent(postRequest.getContent());
+        return mapToDto(postRepository.save(post));
+    }
+
+    @Override
+    public PostResponse editFilesFromPost(Account account, Post post, List<MultipartFile> files) {
+        if (!post.getAccount().getId().equals(account.getId())) {
+            throw new RuntimeException("You don't have permission to edit this post");
+        }
+        List<Media> mediaList = new ArrayList<>();
+
+        if (files != null && !files.isEmpty()) {
+
+            for (Media media : post.getMedias()) {
+                deleteFileFromS3(media.getUrl());
+            }
+            post.getMedias().clear();
+
+            saveMedias(post, files, mediaList);
+        }
+
+        post.getMedias().addAll(mediaList);
+        postRepository.save(post);
+
+        return mapToDto(post);
+    }
+
+    @Override
+    public PostResponse inactivePost(Account account, Post post) {
+        if (!post.getAccount().getId().equals(account.getId())) {
+            throw new RuntimeException("You don't have permission to inactive this post");
+        }
+        post.setPostStatus(PostStatus.INACTIVE);
+        return mapToDto(postRepository.save(post));
+    }
+
+    @Override
+    public PostResponse activePost(Account account, Post post) {
+        if (!post.getAccount().getId().equals(account.getId())) {
+            throw new RuntimeException("You don't have permission to active this post");
+        }
+        post.setPostStatus(PostStatus.ACTIVE);
+        return mapToDto(postRepository.save(post));
+    }
+    
+    @Override
+    public void deletePost(Account account,Post post) {
+        if (!post.getAccount().getId().equals(account.getId())) {
+            throw new RuntimeException("You don't have permission to delete this post");
+        }
+        postRepository.delete(post);
+        postRepository.flush();
     }
 }

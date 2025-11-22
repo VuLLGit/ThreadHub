@@ -5,6 +5,7 @@ import com.example.ThreadHub.dto.response.CommunityMemberResponse;
 import com.example.ThreadHub.dto.response.CommunityResponse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.CommunityMember;
+import com.example.ThreadHub.entity.enums.MemberRole;
 import com.example.ThreadHub.service.CommunityMemberService;
 import com.example.ThreadHub.service.CommunityService;
 import jakarta.validation.Valid;
@@ -41,7 +42,7 @@ public class CommunityModeratorController {
         Account account = (Account) authentication.getPrincipal();
         CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
 
-        if (!communityMemberService.isModerator(actorCommunityMember.getId()) && !communityMemberService.isOwner(actorCommunityMember.getId())){
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && (!actorCommunityMember.getMemberRole().equals(MemberRole.OWNER))) {
             return ResponseEntity.status(403).body("Forbidden");
         }
 
@@ -60,12 +61,8 @@ public class CommunityModeratorController {
         Account account = (Account) authentication.getPrincipal();
         CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
 
-        if (!communityMemberService.isModerator(actorCommunityMember.getId()) && !communityMemberService.isOwner(actorCommunityMember.getId())){
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
             return ResponseEntity.status(403).body("Forbidden");
-        }
-
-        if(!communityMemberService.isMemberExist(communityMemberId)){
-            return ResponseEntity.badRequest().body("cannot find member");
         }
 
         CommunityMemberResponse communityMemberResponse = communityMemberService.assignModerator(communityMemberId);
@@ -83,12 +80,8 @@ public class CommunityModeratorController {
         Account account = (Account) authentication.getPrincipal();
         CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
 
-        if (!communityMemberService.isOwner(actorCommunityMember.getId())){
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
             return ResponseEntity.status(403).body("Forbidden");
-        }
-
-        if(!communityMemberService.isMemberExist(communityMemberId)){
-            return ResponseEntity.badRequest().body("cannot find member");
         }
 
         CommunityMemberResponse communityMemberResponse = communityMemberService.removeModerator(communityMemberId);
@@ -106,12 +99,8 @@ public class CommunityModeratorController {
         Account account = (Account) authentication.getPrincipal();
         CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
 
-        if (!communityMemberService.isOwner(actorCommunityMember.getId())){
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
             return ResponseEntity.status(403).body("Forbidden");
-        }
-
-        if(!communityMemberService.isMemberExist(communityMemberId)){
-            return ResponseEntity.badRequest().body("cannot find member");
         }
 
         CommunityMemberResponse communityMemberResponse = communityMemberService.transferOwner(actorCommunityMember.getId(), communityMemberId);
@@ -137,7 +126,7 @@ public class CommunityModeratorController {
             return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        if (!communityMemberService.isModerator(actorCommunityMember.getId()) && !communityMemberService.isOwner(actorCommunityMember.getId())){
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
             return ResponseEntity.status(403).body("Forbidden");
         }
 
@@ -155,7 +144,7 @@ public class CommunityModeratorController {
         Account account = (Account) authentication.getPrincipal();
         CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
 
-        if (!communityMemberService.isModerator(actorCommunityMember.getId()) && !communityMemberService.isOwner(actorCommunityMember.getId())){
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
             return ResponseEntity.status(403).body("Forbidden");
         }
 
@@ -173,7 +162,7 @@ public class CommunityModeratorController {
         Account account = (Account) authentication.getPrincipal();
         CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
 
-        if (!communityMemberService.isModerator(actorCommunityMember.getId()) && !communityMemberService.isOwner(actorCommunityMember.getId())){
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
             return ResponseEntity.status(403).body("Forbidden");
         }
 

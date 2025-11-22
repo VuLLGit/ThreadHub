@@ -17,4 +17,13 @@ public interface PostService {
 
     PostResponse uploadFilesToPost(Post post, List<MultipartFile> files);
 
+    PostResponse editPost(Account account ,Post post, PostRequest postRequest);
+
+    PostResponse editFilesFromPost(Account account, Post post, List<MultipartFile> files);
+
+    PostResponse inactivePost(Account account,Post post);
+
+    PostResponse activePost(Account account, Post post);
+
+    void deletePost(Account account, Post post);
 }

@@ -4,11 +4,15 @@ import com.example.ThreadHub.dto.request.RegisterRequest;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.enums.AccountRole;
 import com.example.ThreadHub.entity.enums.AccountStatus;
+import com.example.ThreadHub.exception.BusinessException;
+import com.example.ThreadHub.exception.NotFoundException;
 import com.example.ThreadHub.repository.AccountRepository;
 import com.example.ThreadHub.service.AccountService;
+import com.example.ThreadHub.util.JwtUtil;
 import com.example.ThreadHub.util.PasswordHasher;
 import com.example.ThreadHub.util.RandomPassword;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
@@ -27,20 +31,28 @@ public class AccountServiceImpl implements AccountService {
         this.accountRepository = accountRepository;
     }
 
-    @Override
-    public boolean isUsernameAvailable(String username) {
+    private boolean isUsernameAvailable(String username) {
         return accountRepository.findAll().stream()
                 .noneMatch(account -> account.getUsername().equals(username));
     }
 
-    @Override
-    public boolean isEmailAvailable(String email) {
+    private boolean isEmailAvailable(String email) {
         return accountRepository.findAll().stream()
                 .noneMatch(account -> account.getEmail().equals(email));
     }
 
     @Override
     public void register(RegisterRequest registerRequest) {
+        if (!isUsernameAvailable(registerRequest.getUsername())) {
+            throw new BusinessException("Username is taken");
+        }
+        if (!isEmailAvailable(registerRequest.getEmail())) {
+            throw new BusinessException("Email is taken");
+        }
+        if (!registerRequest.getPassword().equals(registerRequest.getRepeatPassword())) {
+            throw new BusinessException("Password and repeat password must be the same");
+        }
+
         Account account = new Account();
         account.setUsername(registerRequest.getUsername());
         account.setPassword(PasswordHasher.hash(registerRequest.getPassword()));
@@ -68,21 +80,21 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public Account findByEmailVerificationToken(String token) {
-        return accountRepository.findByEmailVerificationToken(token);
-    }
+    public void resendVerificationEmail(String token) {
+        Account account = accountRepository.findByEmailVerificationToken(token);
+        if (account == null) {
+            throw new NotFoundException("");
+        }
 
-    @Override
-    public void resendVerificationEmail(Account account) {
         // Generate token
-        String token = UUID.randomUUID().toString();
-        account.setEmailVerificationToken(token);
+        String newToken = UUID.randomUUID().toString();
+        account.setEmailVerificationToken(newToken);
         account.setEmailVerificationTokenSentAt(LocalDateTime.now());
 
         accountRepository.save(account);
 
         // Prepare verification link
-        String verifyLink = "http://localhost:8080/api/auth/verify?token=" + token;
+        String verifyLink = "http://localhost:8080/api/auth/verify?token=" + newToken;
 
         // Send email verification
         SimpleMailMessage message = new SimpleMailMessage();
@@ -93,25 +105,46 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void verifyEmail(Account account) {
+    public void verifyEmail(String token) {
+        Account account = accountRepository.findByEmailVerificationToken(token);
+        if (account == null) {
+            throw new NotFoundException("Invalid token");
+        }
+
+        LocalDateTime sentDate = account.getEmailVerificationTokenSentAt();
+        if (sentDate == null || sentDate.isBefore(LocalDateTime.now().minusHours(24))) {
+            throw new BusinessException("Verification link expired. Please request a new verification email.");
+        }
+
         account.setEmailVerified(true);
         account.setEmailVerificationToken(null); // clear token
         accountRepository.save(account);
     }
 
     @Override
-    public void changePassword(Account account, String newPassword) {
+    public void changePassword(Account account, String newPassword, String repeatNewPassword) {
+        // validate old password
+        if (!PasswordHasher.hash(newPassword).equals(account.getPassword())) {
+            throw new BusinessException("Old password is incorrect");
+        }
+
+        // validate repeat password
+        if (!newPassword.equals(repeatNewPassword)) {
+            throw new BusinessException("New password and repeat new password must be the same");
+        }
+
         account.setPassword(PasswordHasher.hash(newPassword));
         accountRepository.save(account);
     }
 
     @Override
-    public Account login(String username, String password) {
+    public String login(String username, String password) {
         Account account = accountRepository.findByUsername(username);
         if (account == null || !PasswordHasher.hash(password).equals(account.getPassword())) {
-            return null;
+            throw new NotFoundException("Invalid username or password");
         }
-        return account;
+
+        return JwtUtil.generateToken(account);
     }
 
     @Override
@@ -122,6 +155,8 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void forgotPassword(String email) {
         Account account = accountRepository.findByEmail(email);
+        if (account == null)
+            throw new NotFoundException("Email not found");
 
         String newPassword = RandomPassword.generate();
         account.setPassword(PasswordHasher.hash(newPassword));
@@ -133,10 +168,5 @@ public class AccountServiceImpl implements AccountService {
         message.setSubject("Reset your password");
         message.setText("Your password has been change to: " + newPassword + "\n please use this password to login and change it in your profile");
         javaMailSender.send(message);
-    }
-
-    @Override
-    public Account findByEmail(String email) {
-        return accountRepository.findByEmail(email);
     }
 }
