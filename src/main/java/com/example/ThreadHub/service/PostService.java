@@ -1,6 +1,7 @@
 package com.example.ThreadHub.service;
 
-import com.example.ThreadHub.dto.request.CreatePostRequest;
+import com.example.ThreadHub.dto.request.PostRequest;
+import com.example.ThreadHub.dto.response.PostResponse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
 import com.example.ThreadHub.entity.Media;
@@ -12,8 +13,8 @@ import java.util.List;
 public interface PostService {
     Post getPostById(Long id);
 
-    Post createPost(CreatePostRequest createPostRequest, Account account, Community community);
+    PostResponse createPost(PostRequest postRequest, Account account, Community community);
 
-    List<Media> uploadFilesToPost(Post post, List<MultipartFile> files);
+    PostResponse uploadFilesToPost(Post post, List<MultipartFile> files);
 
 }

@@ -1,6 +1,7 @@
 package com.example.ThreadHub.service.impl;
 
-import com.example.ThreadHub.dto.request.CreatePostRequest;
+import com.example.ThreadHub.dto.request.PostRequest;
+import com.example.ThreadHub.dto.response.PostResponse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
 import com.example.ThreadHub.entity.Media;
@@ -70,6 +71,27 @@ public class PostServiceImpl implements PostService {
         );
     }
 
+    private PostResponse mapToDto(Post post) {
+        PostResponse postResponse = new PostResponse();
+        postResponse.setId(post.getId());
+        postResponse.setTitle(post.getTitle());
+        postResponse.setContent(post.getContent());
+        postResponse.setPostStatus(post.getPostStatus().getValue());
+        postResponse.setCommunityName(post.getCommunity().getName());
+        postResponse.setCommunityImageUrl(post.getCommunity().getImageUrl());
+        postResponse.setAccountUsername(post.getAccount().getUsername());
+        postResponse.setAccountAvatarUrl(post.getAccount().getAvatarUrl());
+
+        if(post.getMedias() != null) {
+            List<String> mediaUrls = new ArrayList<>();
+            for (Media media : post.getMedias()) {
+                mediaUrls.add(media.getUrl());
+            }
+            postResponse.setMediaUrls(mediaUrls);
+        }
+        return postResponse;
+    }
+
     @Override
     public Post getPostById(Long id) {
         return postRepository.findById(id).orElse(null);
@@ -77,20 +99,20 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public Post createPost(CreatePostRequest createPostRequest, Account account, Community community) {
+    public PostResponse createPost(PostRequest postRequest, Account account, Community community) {
         Post post = new Post();
-        post.setTitle(createPostRequest.getTitle());
-        post.setContent(createPostRequest.getContent());
+        post.setTitle(postRequest.getTitle());
+        post.setContent(postRequest.getContent());
         post.setPostStatus(PostStatus.ACTIVE);
         post.setCommunity(community);
         post.setAccount(account);
 
-        return postRepository.save(post);
+        return mapToDto(postRepository.save(post));
     }
 
     @Override
     @Transactional
-    public List<Media> uploadFilesToPost(Post post, List<MultipartFile> files) {
+    public PostResponse uploadFilesToPost(Post post, List<MultipartFile> files) {
         List<Media> mediaList = new ArrayList<>();
 
         if (files != null && !files.isEmpty()) {
@@ -114,7 +136,6 @@ public class PostServiceImpl implements PostService {
         post.getMedias().addAll(mediaList);
         postRepository.save(post);
 
-        return mediaList;
+        return mapToDto(post);
     }
-
 }

@@ -1,11 +1,8 @@
 package com.example.ThreadHub.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
-import java.util.List;
-
-public class CreatePostRequest {
+public class PostRequest {
 
     @NotBlank
     private String title;

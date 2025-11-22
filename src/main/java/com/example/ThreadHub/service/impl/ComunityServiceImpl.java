@@ -1,7 +1,6 @@
 package com.example.ThreadHub.service.impl;
 
-import com.example.ThreadHub.dto.request.CreateCommunityRequest;
-import com.example.ThreadHub.dto.request.UpdateCommunityRequest;
+import com.example.ThreadHub.dto.request.CommunityRequest;
 import com.example.ThreadHub.dto.response.CommunityResponse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
@@ -51,10 +50,10 @@ public class ComunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public CommunityResponse createCommunity(CreateCommunityRequest createCommunityRequest, Account account) {
+    public CommunityResponse createCommunity(CommunityRequest communityRequest, Account account) {
         Community community = new Community();
-        community.setName(createCommunityRequest.getName());
-        community.setImageUrl(createCommunityRequest.getImageUrl());
+        community.setName(communityRequest.getName());
+        community.setImageUrl(communityRequest.getImageUrl());
         community.setCommunityStatus(CommunityStatus.ACTIVE);
         communityRepository.save(community);
 
@@ -69,10 +68,10 @@ public class ComunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public CommunityResponse editCommunity(UpdateCommunityRequest updateCommunityRequest, Long communityId) {
+    public CommunityResponse editCommunity(CommunityRequest communityRequest, Long communityId) {
         Community community = communityRepository.findById(communityId).orElseThrow();
-        community.setName(updateCommunityRequest.getName());
-        community.setImageUrl(updateCommunityRequest.getImageUrl());
+        community.setName(communityRequest.getName());
+        community.setImageUrl(communityRequest.getImageUrl());
         community.setCommunityStatus(CommunityStatus.ACTIVE);
         communityRepository.save(community);
 

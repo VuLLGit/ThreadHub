@@ -85,7 +85,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, BindingResult bindingResult) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request,
+                                   BindingResult bindingResult) {
 
         if (bindingResult.hasErrors()) {
             String errorMessage = bindingResult.getAllErrors().stream()

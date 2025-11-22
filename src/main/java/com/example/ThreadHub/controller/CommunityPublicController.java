@@ -1,8 +1,9 @@
 package com.example.ThreadHub.controller;
 
-import com.example.ThreadHub.dto.request.CreateCommunityRequest;
-import com.example.ThreadHub.dto.request.CreatePostRequest;
+import com.example.ThreadHub.dto.request.CommunityRequest;
+import com.example.ThreadHub.dto.request.PostRequest;
 import com.example.ThreadHub.dto.response.CommunityResponse;
+import com.example.ThreadHub.dto.response.PostResponse;
 import com.example.ThreadHub.entity.*;
 import com.example.ThreadHub.entity.enums.CommunityStatus;
 import com.example.ThreadHub.service.CommunityMemberService;
@@ -36,7 +37,7 @@ public class CommunityPublicController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createCommunity(@Valid @RequestBody CreateCommunityRequest createCommunityRequest,
+    public ResponseEntity<?> createCommunity(@Valid @RequestBody CommunityRequest communityRequest,
                                              BindingResult bindingResult,
                                              Authentication authentication) {
         // validate authentication
@@ -52,10 +53,11 @@ public class CommunityPublicController {
             return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        if (!comunityService.isNameAvailable(createCommunityRequest.getName())) {
+        if (!comunityService.isNameAvailable(communityRequest.getName())) {
             return ResponseEntity.badRequest().body("Community name already exists");
         }
-        CommunityResponse communityResponse = comunityService.createCommunity(createCommunityRequest, account);
+
+        CommunityResponse communityResponse = comunityService.createCommunity(communityRequest, account);
         return ResponseEntity.ok(communityResponse);
     }
 
@@ -113,9 +115,10 @@ public class CommunityPublicController {
     }
 
     @PostMapping("/{communityId}/post/create")
-    public ResponseEntity<?> createPost(@RequestBody CreatePostRequest createPostRequest,
+    public ResponseEntity<?> createPost(@Valid @RequestBody PostRequest postRequest,
                                         @PathVariable Long communityId,
-                                        Authentication authentication) {
+                                        Authentication authentication,
+                                        BindingResult bindingResult) {
 
         if (authentication == null) {
             return ResponseEntity.status(401).body("unauthorized");
@@ -124,18 +127,36 @@ public class CommunityPublicController {
         Account account = (Account) authentication.getPrincipal();
         Community community = comunityService.getCommunityById(communityId);
 
-        Post post = postService.createPost(createPostRequest, account, community);
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+            return ResponseEntity.badRequest().body(errorMessage);
+        }
+
+        PostResponse postResponse = postService.createPost(postRequest, account, community);
         
-        return ResponseEntity.ok(post);
+        return ResponseEntity.ok(postResponse);
     }
 
-    @PostMapping("/post/{postId}/files")
+    @PostMapping(value ="/post/{postId}/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadPostFiles(@PathVariable Long postId,
-                                             @RequestPart("files") List<MultipartFile> files) {
+                                             @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+        // Kiểm tra nếu không có file
+        if (files == null || files.isEmpty()) {
+            return ResponseEntity.badRequest().body("Không có file nào được upload");
+        }
+
+        // Kiểm tra file rỗng
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File rỗng: " + file.getOriginalFilename());
+            }
+        }
 
         Post post = postService.getPostById(postId);
-        List<Media> mediaList = postService.uploadFilesToPost(post, files);
+        PostResponse postResponse = postService.uploadFilesToPost(post, files);
 
-        return ResponseEntity.ok(mediaList);
+        return ResponseEntity.ok(postResponse);
     }
 }

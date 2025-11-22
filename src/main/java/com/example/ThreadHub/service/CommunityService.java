@@ -1,7 +1,6 @@
 package com.example.ThreadHub.service;
 
-import com.example.ThreadHub.dto.request.CreateCommunityRequest;
-import com.example.ThreadHub.dto.request.UpdateCommunityRequest;
+import com.example.ThreadHub.dto.request.CommunityRequest;
 import com.example.ThreadHub.dto.response.CommunityResponse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
@@ -14,9 +13,9 @@ public interface CommunityService {
 
     Community getCommunityById(Long communityId);
 
-    CommunityResponse createCommunity(CreateCommunityRequest createCommunityRequest, Account account);
+    CommunityResponse createCommunity(CommunityRequest communityRequest, Account account);
 
-    CommunityResponse editCommunity(UpdateCommunityRequest uodateCommunityRequest, Long communityId);
+    CommunityResponse editCommunity(CommunityRequest CommunityRequest, Long communityId);
 
     CommunityResponse inactivateCommunity(Long communityId);
 

@@ -1,17 +1,21 @@
 package com.example.ThreadHub.controller;
 
-import com.example.ThreadHub.dto.request.UpdateCommunityRequest;
+import com.example.ThreadHub.dto.request.CommunityRequest;
 import com.example.ThreadHub.dto.response.CommunityMemberResponse;
 import com.example.ThreadHub.dto.response.CommunityResponse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.CommunityMember;
 import com.example.ThreadHub.service.CommunityMemberService;
 import com.example.ThreadHub.service.CommunityService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/community/{communityId}/moderator")
@@ -118,18 +122,26 @@ public class CommunityModeratorController {
     @PatchMapping("/edit")
     public ResponseEntity<?> editCommunity(@PathVariable Long communityId,
                                            Authentication authentication,
-                                           @RequestBody UpdateCommunityRequest updateCommunityRequest) {
+                                           @Valid @RequestBody CommunityRequest communityRequest,
+                                           BindingResult bindingResult) {
         if (authentication == null) {
             return ResponseEntity.badRequest().body("unauthorized");
         }
         Account account = (Account) authentication.getPrincipal();
         CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
 
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+            return ResponseEntity.badRequest().body(errorMessage);
+        }
+
         if (!communityMemberService.isModerator(actorCommunityMember.getId()) && !communityMemberService.isOwner(actorCommunityMember.getId())){
             return ResponseEntity.status(403).body("Forbidden");
         }
 
-        CommunityResponse communityResponse = comunityService.editCommunity(updateCommunityRequest, communityId);
+        CommunityResponse communityResponse = comunityService.editCommunity(communityRequest, communityId);
 
         return ResponseEntity.ok(communityResponse);
     }
