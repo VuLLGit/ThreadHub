@@ -2,6 +2,7 @@ package com.example.ThreadHub.service.impl;
 
 import com.example.ThreadHub.dto.request.CreateCommunityRequest;
 import com.example.ThreadHub.dto.request.UpdateCommunityRequest;
+import com.example.ThreadHub.dto.response.MyCommunitiesResonse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
 import com.example.ThreadHub.entity.CommunityMember;
@@ -13,6 +14,10 @@ import com.example.ThreadHub.repository.CommunityRepository;
 import com.example.ThreadHub.service.CommunityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @Service
 public class ComunityServiceImpl implements CommunityService {
@@ -74,5 +79,19 @@ public class ComunityServiceImpl implements CommunityService {
         Community community = communityRepository.findById(communityId).orElseThrow();
         community.setCommunityStatus(CommunityStatus.ACTIVE);
         communityRepository.save(community);
+    }
+
+    @Override
+    public List<MyCommunitiesResonse> getAllCommunitiesByAccountId(Long accountId) {
+        List<CommunityMember> communityMembers = communityMemberRepository.findAllByAccountId(accountId);
+        List<Community> communities = communityMembers.stream().map(CommunityMember::getCommunity).toList();
+
+        return communities.stream().map(entity -> {
+            MyCommunitiesResonse dto = new MyCommunitiesResonse();
+            dto.setId(entity.getId());
+            dto.setName(entity.getName());
+            dto.setImageUrl(entity.getImageUrl());
+            return dto;
+        }).collect(Collectors.toList());
     }
 }

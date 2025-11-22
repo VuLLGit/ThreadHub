@@ -101,6 +101,16 @@ public class CommunityPublicController {
         return ResponseEntity.ok().body("Left community successfully");
     }
 
+    @GetMapping("/my-communities")
+    public ResponseEntity<?> getMyCommunities(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.badRequest().body("unauthorized");
+        }
+        Account account = (Account) authentication.getPrincipal();
+
+        return ResponseEntity.ok().body(comunityService.getAllCommunitiesByAccountId(account.getId()));
+    }
+
     @PostMapping("/{communityId}/post/create")
     public ResponseEntity<?> createPost(@RequestBody CreatePostRequest createPostRequest,
                                         @PathVariable Long communityId,
@@ -127,5 +137,4 @@ public class CommunityPublicController {
 
         return ResponseEntity.ok(mediaList);
     }
-
 }
