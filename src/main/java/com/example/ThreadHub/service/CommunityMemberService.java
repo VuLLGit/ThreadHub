@@ -18,11 +18,11 @@ public interface CommunityMemberService {
 
     boolean isMemberExist(Long communityMemberId);
 
-    void assignModerator(Long communityMemberId);
+    CommunityMemberResponse assignModerator(Long communityMemberId);
 
-    void removeModerator(Long communityMemberId);
+    CommunityMemberResponse removeModerator(Long communityMemberId);
 
-    void transferOwner(Long actorCommunityMemberId, Long newOwnerCommunityMemberId);
+    CommunityMemberResponse transferOwner(Long actorCommunityMemberId, Long newOwnerCommunityMemberId);
 
     void joinCommunity(Long communityId, Long accountId);
 

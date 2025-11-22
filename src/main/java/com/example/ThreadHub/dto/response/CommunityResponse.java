@@ -1,11 +1,12 @@
 package com.example.ThreadHub.dto.response;
 
-import com.example.ThreadHub.entity.Community;
+import com.example.ThreadHub.entity.enums.CommunityStatus;
 
-public class MyCommunitiesResonse {
+public class CommunityResponse {
     private Long id;
     private String name;
     private String imageUrl;
+    private CommunityStatus communityStatus;
 
     // getters and setters
 
@@ -31,5 +32,13 @@ public class MyCommunitiesResonse {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public CommunityStatus getCommunityStatus() {
+        return communityStatus;
+    }
+
+    public void setCommunityStatus(CommunityStatus communityStatus) {
+        this.communityStatus = communityStatus;
     }
 }

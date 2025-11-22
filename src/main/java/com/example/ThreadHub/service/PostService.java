@@ -15,4 +15,5 @@ public interface PostService {
     Post createPost(CreatePostRequest createPostRequest, Account account, Community community);
 
     List<Media> uploadFilesToPost(Post post, List<MultipartFile> files);
+
 }

@@ -2,6 +2,7 @@ package com.example.ThreadHub.controller;
 
 import com.example.ThreadHub.dto.request.CreateCommunityRequest;
 import com.example.ThreadHub.dto.request.CreatePostRequest;
+import com.example.ThreadHub.dto.response.CommunityResponse;
 import com.example.ThreadHub.entity.*;
 import com.example.ThreadHub.entity.enums.CommunityStatus;
 import com.example.ThreadHub.service.CommunityMemberService;
@@ -54,8 +55,8 @@ public class CommunityPublicController {
         if (!comunityService.isNameAvailable(createCommunityRequest.getName())) {
             return ResponseEntity.badRequest().body("Community name already exists");
         }
-        comunityService.createCommunity(createCommunityRequest, account);
-        return ResponseEntity.ok().body("Community created successfully");
+        CommunityResponse communityResponse = comunityService.createCommunity(createCommunityRequest, account);
+        return ResponseEntity.ok(communityResponse);
     }
 
     @PostMapping("/{communityId}/join")

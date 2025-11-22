@@ -1,11 +1,14 @@
 package com.example.ThreadHub.controller;
 
 import com.example.ThreadHub.dto.request.UpdateCommunityRequest;
+import com.example.ThreadHub.dto.response.CommunityMemberResponse;
+import com.example.ThreadHub.dto.response.CommunityResponse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.CommunityMember;
 import com.example.ThreadHub.service.CommunityMemberService;
 import com.example.ThreadHub.service.CommunityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +40,10 @@ public class CommunityModeratorController {
         if (!communityMemberService.isModerator(actorCommunityMember.getId()) && !communityMemberService.isOwner(actorCommunityMember.getId())){
             return ResponseEntity.status(403).body("Forbidden");
         }
-        return ResponseEntity.ok().body(communityMemberService.getCommunityMembers(page, size, "createdAt", communityId));
+
+        Page<CommunityMemberResponse> communityMembers = communityMemberService.getCommunityMembers(page, size, "createdAt", communityId);
+
+        return ResponseEntity.ok(communityMembers);
     }
 
     @PatchMapping("/members/{communityMemberId}/assign-moderator")
@@ -58,8 +64,9 @@ public class CommunityModeratorController {
             return ResponseEntity.badRequest().body("cannot find member");
         }
 
-        communityMemberService.assignModerator(communityMemberId);
-        return ResponseEntity.ok().body("assign moderator successfully");
+        CommunityMemberResponse communityMemberResponse = communityMemberService.assignModerator(communityMemberId);
+
+        return ResponseEntity.ok(communityMemberResponse);
     }
 
     @PatchMapping("/members/{communityMemberId}/remove-moderator")
@@ -80,8 +87,9 @@ public class CommunityModeratorController {
             return ResponseEntity.badRequest().body("cannot find member");
         }
 
-        communityMemberService.removeModerator(communityMemberId);
-        return ResponseEntity.ok().body("remove moderator successfully");
+        CommunityMemberResponse communityMemberResponse = communityMemberService.removeModerator(communityMemberId);
+
+        return ResponseEntity.ok(communityMemberResponse);
     }
 
     @PatchMapping("/members/{communityMemberId}/transfer-owner")
@@ -102,9 +110,11 @@ public class CommunityModeratorController {
             return ResponseEntity.badRequest().body("cannot find member");
         }
 
-        communityMemberService.transferOwner(actorCommunityMember.getId(), communityMemberId);
-        return ResponseEntity.ok().body("transfer owner successfully");
+        CommunityMemberResponse communityMemberResponse = communityMemberService.transferOwner(actorCommunityMember.getId(), communityMemberId);
+
+        return ResponseEntity.ok(communityMemberResponse);
     }
+
     @PatchMapping("/edit")
     public ResponseEntity<?> editCommunity(@PathVariable Long communityId,
                                            Authentication authentication,
@@ -119,9 +129,9 @@ public class CommunityModeratorController {
             return ResponseEntity.status(403).body("Forbidden");
         }
 
-        comunityService.editCommunity(updateCommunityRequest, communityId);
+        CommunityResponse communityResponse = comunityService.editCommunity(updateCommunityRequest, communityId);
 
-        return ResponseEntity.ok().body("Community edited successfully");
+        return ResponseEntity.ok(communityResponse);
     }
 
     @PatchMapping("/inactive")
@@ -136,8 +146,10 @@ public class CommunityModeratorController {
         if (!communityMemberService.isModerator(actorCommunityMember.getId()) && !communityMemberService.isOwner(actorCommunityMember.getId())){
             return ResponseEntity.status(403).body("Forbidden");
         }
-        comunityService.inactivateCommunity(communityId);
-        return ResponseEntity.ok().body("Community inactivated successfully");
+
+        CommunityResponse communityResponse = comunityService.inactivateCommunity(communityId);
+
+        return ResponseEntity.ok(communityResponse);
     }
 
     @PatchMapping("/active")
@@ -152,7 +164,9 @@ public class CommunityModeratorController {
         if (!communityMemberService.isModerator(actorCommunityMember.getId()) && !communityMemberService.isOwner(actorCommunityMember.getId())){
             return ResponseEntity.status(403).body("Forbidden");
         }
-        comunityService.activateCommunity(communityId);
-        return ResponseEntity.ok().body("Community activated successfully");
+
+        CommunityResponse communityResponse = comunityService.activateCommunity(communityId);
+
+        return ResponseEntity.ok(communityResponse);
     }
 }

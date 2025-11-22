@@ -32,21 +32,22 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
         this.accountRepository = accountRepository;
     }
 
+    private CommunityMemberResponse mapToDto(CommunityMember communityMember) {
+        CommunityMemberResponse dto = new CommunityMemberResponse();
+        dto.setId(communityMember.getId());
+        dto.setMemberRole(communityMember.getMemberRole());
+        dto.setMemberStatus(communityMember.getMemberStatus());
+        dto.setAccountId(communityMember.getAccount().getId());
+        dto.setCommunityId(communityMember.getCommunity().getId());
+        return dto;
+    }
+
     @Override
     public Page<CommunityMemberResponse> getCommunityMembers(int page, int size, String sortBy, Long CommunityId) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).descending());
         Page<CommunityMember> communityMembers = communityMemberRepository.findAllByCommunityId(CommunityId, pageable);
 
-        //map to dto
-        return  communityMembers.map(entity ->{
-            CommunityMemberResponse dto = new CommunityMemberResponse();
-            dto.setId(entity.getId());
-            dto.setMemberRole(entity.getMemberRole());
-            dto.setMemberStatus(entity.getMemberStatus());
-            dto.setAccountId(entity.getAccount().getId());
-            dto.setCommunityId(entity.getCommunity().getId());
-            return dto;
-        });
+        return communityMembers.map(this::mapToDto);
 
     }
 
@@ -74,21 +75,24 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
     }
 
     @Override
-    public void assignModerator(Long CommunityMemberId) {
+    public CommunityMemberResponse assignModerator(Long CommunityMemberId) {
         CommunityMember communityMember = communityMemberRepository.findById(CommunityMemberId).orElseThrow();
         communityMember.setMemberRole(MemberRole.MODERATOR);
         communityMemberRepository.save(communityMember);
+        return mapToDto(communityMember);
     }
 
     @Override
-    public void removeModerator(Long CommunityMemberId) {
+    public CommunityMemberResponse removeModerator(Long CommunityMemberId) {
         CommunityMember communityMember = communityMemberRepository.findById(CommunityMemberId).orElseThrow();
         communityMember.setMemberRole(MemberRole.MEMBER);
         communityMemberRepository.save(communityMember);
+
+        return mapToDto(communityMember);
     }
 
     @Override
-    public void transferOwner(Long actorCommunityMemberId, Long newOwnerCommunityMemberId) {
+    public CommunityMemberResponse transferOwner(Long actorCommunityMemberId, Long newOwnerCommunityMemberId) {
         CommunityMember newOwnerCommunityMember = communityMemberRepository.findById(newOwnerCommunityMemberId).orElseThrow();
         newOwnerCommunityMember.setMemberRole(MemberRole.OWNER);
         communityMemberRepository.save(newOwnerCommunityMember);
@@ -96,6 +100,8 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
         CommunityMember actorCommunityMember = communityMemberRepository.findById(actorCommunityMemberId).orElseThrow();
         actorCommunityMember.setMemberRole(MemberRole.MODERATOR);
         communityMemberRepository.save(actorCommunityMember);
+
+        return mapToDto(newOwnerCommunityMember);
     }
 
     @Override
