@@ -8,10 +8,15 @@ import com.example.ThreadHub.entity.CommunityMember;
 import com.example.ThreadHub.entity.enums.CommunityStatus;
 import com.example.ThreadHub.entity.enums.MemberRole;
 import com.example.ThreadHub.entity.enums.MemberStatus;
+import com.example.ThreadHub.exception.NotFoundException;
 import com.example.ThreadHub.repository.CommunityMemberRepository;
 import com.example.ThreadHub.repository.CommunityRepository;
 import com.example.ThreadHub.service.CommunityService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -45,8 +50,28 @@ public class ComunityServiceImpl implements CommunityService {
     }
 
     @Override
-    public Community getCommunityById(Long communityId) {
-        return communityRepository.findById(communityId).orElse(null);
+    public Page<CommunityResponse> getAllCommunities(int page, int size, String sortBy, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).descending());
+
+        Page<Community> communities;
+        if (search == null || search.isBlank()) {
+            communities = communityRepository.findAll(pageable);
+        } else {
+            communities = communityRepository.findAllSearchedCommunities(search.trim(), pageable);
+        }
+
+        return communities.map(this::mapToDTO);
+    }
+
+    @Override
+    public CommunityResponse getCommunityById(Long communityId) {
+        Community community = communityRepository.findById(communityId).orElse(null);
+
+        if( community == null ) {
+            throw new NotFoundException("Community not found");
+        }
+
+        return mapToDTO(community);
     }
 
     @Override

@@ -31,7 +31,32 @@ public class CommunityController {
         this.communityMemberService = communityMemberService;
     }
 
-    // user action
+    @GetMapping()
+    public ResponseEntity<?> getAllCommunities(@RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "10") int size,
+                                               @RequestParam(defaultValue = "createdAt") String sortBy,
+                                               @RequestParam(defaultValue = "") String search) {
+        Page<CommunityResponse> communities = comunityService.getAllCommunities(page, size, sortBy, search);
+
+        return ResponseEntity.ok(communities);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyCommunities(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.badRequest().body("unauthorized");
+        }
+        Account account = (Account) authentication.getPrincipal();
+
+        return ResponseEntity.ok().body(comunityService.getAllCommunitiesByAccountId(account.getId()));
+    }
+
+    @GetMapping("/{communityId}")
+    public ResponseEntity<?> getCommunityById(@PathVariable Long communityId) {
+        CommunityResponse communityResponse = comunityService.getCommunityById(communityId);
+        return ResponseEntity.ok(communityResponse);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> createCommunity(@Valid @RequestBody CommunityRequest communityRequest,
                                              BindingResult bindingResult,

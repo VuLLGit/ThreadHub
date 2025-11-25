@@ -4,12 +4,15 @@ import com.example.ThreadHub.dto.request.CommunityRequest;
 import com.example.ThreadHub.dto.response.CommunityResponse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface CommunityService {
 
-    Community getCommunityById(Long communityId);
+    Page<CommunityResponse> getAllCommunities(int page, int size, String sortBy, String search);
+
+    CommunityResponse getCommunityById(Long communityId);
 
     CommunityResponse createCommunity(CommunityRequest communityRequest, Account account);
 

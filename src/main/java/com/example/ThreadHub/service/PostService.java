@@ -6,24 +6,29 @@ import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
 import com.example.ThreadHub.entity.Media;
 import com.example.ThreadHub.entity.Post;
+import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface PostService {
-    Post getPostById(Long id);
+    Page<PostResponse> getAllPosts(int page, int size, String sortBy, String search);
 
-    PostResponse createPost(PostRequest postRequest, Account account, Community community);
+    Page<PostResponse> getAllPostsByCommunity(Long communityId, int page, int size, String sortBy, String search);
 
-    PostResponse uploadFilesToPost(Post post, List<MultipartFile> files);
+    PostResponse getPostById(Long postId);
 
-    PostResponse editPost(Account account ,Post post, PostRequest postRequest);
+    PostResponse createPost(PostRequest postRequest, Account account, Long communityId);
 
-    PostResponse editFilesFromPost(Account account, Post post, List<MultipartFile> files);
+    PostResponse uploadFilesToPost(Long postId, List<MultipartFile> files);
 
-    PostResponse inactivePost(Account account,Post post);
+    PostResponse editPost(Account account, Long postId, PostRequest postRequest);
 
-    PostResponse activePost(Account account, Post post);
+    PostResponse editFilesFromPost(Account account, Long postId, List<MultipartFile> files);
 
-    void deletePost(Account account, Post post);
+    PostResponse inactivePost(Account account,Long postId);
+
+    PostResponse activePost(Account account, Long postId);
+
+    void deletePost(Account account, Long postId);
 }

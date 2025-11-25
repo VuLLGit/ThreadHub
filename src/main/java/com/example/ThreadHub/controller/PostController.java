@@ -8,6 +8,7 @@ import com.example.ThreadHub.entity.Post;
 import com.example.ThreadHub.service.CommunityService;
 import com.example.ThreadHub.service.PostService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,25 +20,42 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/post")
+@RequestMapping("/api/posts")
 public class PostController {
 
-    CommunityService comunityService;
+    CommunityService communityService;
     PostService postService;
 
     public PostController(CommunityService comunityService, PostService postService) {
-        this.comunityService = comunityService;
+        this.communityService = comunityService;
         this.postService = postService;
     }
 
-    @GetMapping("/my-communities")
-    public ResponseEntity<?> getMyCommunities(Authentication authentication) {
-        if (authentication == null) {
-            return ResponseEntity.badRequest().body("unauthorized");
-        }
-        Account account = (Account) authentication.getPrincipal();
+    @GetMapping
+    public ResponseEntity<?> getAllPosts(@RequestParam(defaultValue = "0") int page,
+                                         @RequestParam(defaultValue = "10") int size,
+                                         @RequestParam(defaultValue = "createdAt") String sortBy,
+                                         @RequestParam(defaultValue = "") String search) {
+        Page<PostResponse> posts = postService.getAllPosts(page, size, sortBy, search);
 
-        return ResponseEntity.ok().body(comunityService.getAllCommunitiesByAccountId(account.getId()));
+        return ResponseEntity.ok().body(posts);
+    }
+
+    @GetMapping("/community/{communityId}")
+    public ResponseEntity<?> getAllPostsByCommunity(@PathVariable Long communityId,
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size,
+                                                    @RequestParam(defaultValue = "createdAt") String sortBy,
+                                                    @RequestParam(defaultValue = "") String search) {
+        Page<PostResponse> posts = postService.getAllPostsByCommunity(communityId, page, size, sortBy, search);
+
+        return ResponseEntity.ok().body(posts);
+    }
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<?> getPostById(@PathVariable Long postId) {
+        PostResponse postResponse = postService.getPostById(postId);
+        return ResponseEntity.ok().body(postResponse);
     }
 
     @PostMapping("/create")
@@ -50,7 +68,6 @@ public class PostController {
         }
 
         Account account = (Account) authentication.getPrincipal();
-        Community community = comunityService.getCommunityById(postRequest.getCommunityId());
 
         if (bindingResult.hasErrors()) {
             String errorMessage = bindingResult.getAllErrors().stream()
@@ -59,7 +76,7 @@ public class PostController {
             return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        PostResponse postResponse = postService.createPost(postRequest, account, community);
+        PostResponse postResponse = postService.createPost(postRequest, account, postRequest.getCommunityId());
 
         return ResponseEntity.ok(postResponse);
     }
@@ -67,8 +84,7 @@ public class PostController {
     @PostMapping(value ="/{postId}/add-files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadPostFiles(@PathVariable Long postId,
                                              @RequestPart(value = "files", required = false) List<MultipartFile> files) {
-        Post post = postService.getPostById(postId);
-        PostResponse postResponse = postService.uploadFilesToPost(post, files);
+        PostResponse postResponse = postService.uploadFilesToPost(postId, files);
 
         return ResponseEntity.ok(postResponse);
     }
@@ -91,7 +107,7 @@ public class PostController {
             return ResponseEntity.badRequest().body(errorMessage);
         }
 
-        PostResponse postResponse = postService.editPost(account, postService.getPostById(postId), postRequest);
+        PostResponse postResponse = postService.editPost(account, postId, postRequest);
 
         return ResponseEntity.ok(postResponse);
     }
@@ -105,8 +121,7 @@ public class PostController {
         }
 
         Account account = (Account) authentication.getPrincipal();
-        Post post = postService.getPostById(postId);
-        PostResponse postResponse = postService.editFilesFromPost(account, post, files);
+        PostResponse postResponse = postService.editFilesFromPost(account, postId, files);
         return ResponseEntity.ok(postResponse);
     }
 
@@ -118,7 +133,7 @@ public class PostController {
         }
 
         Account account = (Account) authentication.getPrincipal();
-        PostResponse postResponse = postService.inactivePost(account, postService.getPostById(postId));
+        PostResponse postResponse = postService.inactivePost(account, postId);
         return ResponseEntity.ok(postResponse);
     }
 
@@ -130,7 +145,7 @@ public class PostController {
         }
 
         Account account = (Account) authentication.getPrincipal();
-        PostResponse postResponse = postService.activePost(account, postService.getPostById(postId));
+        PostResponse postResponse = postService.activePost(account, postId);
         return ResponseEntity.ok(postResponse);
     }
 
@@ -143,7 +158,7 @@ public class PostController {
 
         Account account = (Account) authentication.getPrincipal();
 
-        postService.deletePost(account, postService.getPostById(postId));
+        postService.deletePost(account, postId);
         return ResponseEntity.ok().body("post deleted");
     }
 }
