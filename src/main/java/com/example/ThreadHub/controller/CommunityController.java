@@ -19,19 +19,66 @@ import org.springframework.web.bind.annotation.*;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/community/{communityId}/moderator")
-public class CommunityModeratorController {
+@RequestMapping("/api/communities")
+public class CommunityController {
 
     private CommunityService comunityService;
     private CommunityMemberService communityMemberService;
 
     @Autowired
-    public CommunityModeratorController(CommunityService comunityService, CommunityMemberService communityMemberService) {
+    public CommunityController(CommunityService comunityService, CommunityMemberService communityMemberService) {
         this.comunityService = comunityService;
         this.communityMemberService = communityMemberService;
     }
 
-    @GetMapping("/members")
+    // user action
+    @PostMapping("/create")
+    public ResponseEntity<?> createCommunity(@Valid @RequestBody CommunityRequest communityRequest,
+                                             BindingResult bindingResult,
+                                             Authentication authentication) {
+        // validate authentication
+        if (authentication == null) {
+            return ResponseEntity.badRequest().body("unauthorized");
+        }
+        Account account = (Account) authentication.getPrincipal();
+
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+            return ResponseEntity.badRequest().body(errorMessage);
+        }
+
+        CommunityResponse communityResponse = comunityService.createCommunity(communityRequest, account);
+        return ResponseEntity.ok(communityResponse);
+    }
+
+    @PostMapping("/{communityId}/join")
+    public ResponseEntity<?> joinCommunity(@PathVariable Long communityId,
+                                           Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.badRequest().body("unauthorized");
+        }
+        Account account = (Account) authentication.getPrincipal();
+
+        communityMemberService.joinCommunity(communityId, account.getId());
+        return ResponseEntity.ok().body("Joined community successfully");
+    }
+
+    @DeleteMapping("/{communityId}/leave")
+    public ResponseEntity<?> leaveCommunity(@PathVariable Long communityId,
+                                            Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.badRequest().body("unauthorized");
+        }
+        Account account = (Account) authentication.getPrincipal();
+
+        communityMemberService.leaveCommunity(communityId, account.getId());
+        return ResponseEntity.ok().body("Left community successfully");
+    }
+
+    // Moderator actions
+    @GetMapping("/{communityId}/members")
     public ResponseEntity<?> getCommunityMembers(@RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "7") int size,
                                                  @PathVariable Long communityId,
@@ -51,7 +98,7 @@ public class CommunityModeratorController {
         return ResponseEntity.ok(communityMembers);
     }
 
-    @PatchMapping("/members/{communityMemberId}/assign-moderator")
+    @PatchMapping("/{communityId}/members/{communityMemberId}/assign-moderator")
     public ResponseEntity<?> assignModerator(@PathVariable Long communityMemberId,
                                              @PathVariable Long communityId,
                                              Authentication authentication) {
@@ -70,7 +117,7 @@ public class CommunityModeratorController {
         return ResponseEntity.ok(communityMemberResponse);
     }
 
-    @PatchMapping("/members/{communityMemberId}/remove-moderator")
+    @PatchMapping("/{communityId}/members/{communityMemberId}/remove-moderator")
     public ResponseEntity<?> removeModerator(@PathVariable Long communityMemberId,
                                              @PathVariable Long communityId,
                                              Authentication authentication) {
@@ -89,7 +136,7 @@ public class CommunityModeratorController {
         return ResponseEntity.ok(communityMemberResponse);
     }
 
-    @PatchMapping("/members/{communityMemberId}/transfer-owner")
+    @PatchMapping("/{communityId}/members/{communityMemberId}/transfer-owner")
     public ResponseEntity<?> transferOwner(@PathVariable Long communityMemberId,
                                            @PathVariable Long communityId,
                                            Authentication authentication) {
@@ -108,7 +155,7 @@ public class CommunityModeratorController {
         return ResponseEntity.ok(communityMemberResponse);
     }
 
-    @PatchMapping("/edit")
+    @PatchMapping("/{communityId}/edit")
     public ResponseEntity<?> editCommunity(@PathVariable Long communityId,
                                            Authentication authentication,
                                            @Valid @RequestBody CommunityRequest communityRequest,
@@ -135,7 +182,7 @@ public class CommunityModeratorController {
         return ResponseEntity.ok(communityResponse);
     }
 
-    @PatchMapping("/inactive")
+    @PatchMapping("/{communityId}/inactive")
     public ResponseEntity<?> inactiveCommunity(@PathVariable Long communityId,
                                                Authentication authentication) {
         if (authentication == null) {
@@ -153,7 +200,7 @@ public class CommunityModeratorController {
         return ResponseEntity.ok(communityResponse);
     }
 
-    @PatchMapping("/active")
+    @PatchMapping("/{communityId}/active")
     public ResponseEntity<?> activeCommunity(@PathVariable Long communityId,
                                              Authentication authentication) {
         if (authentication == null) {
