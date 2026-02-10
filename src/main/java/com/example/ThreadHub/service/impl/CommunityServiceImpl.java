@@ -17,20 +17,24 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class ComunityServiceImpl implements CommunityService {
+public class CommunityServiceImpl implements CommunityService {
+
+    /* ===================== CONSTANT MESSAGES ===================== */
+    private static final String MSG_COMMUNITY_NOT_FOUND = "Community not found";
+    private static final String MSG_COMMUNITY_NAME_EXISTS = "Community name already exists";
+    /* ============================================================= */
 
     private final CommunityRepository communityRepository;
     private final CommunityMemberRepository communityMemberRepository;
 
     @Autowired
-    public ComunityServiceImpl(CommunityRepository communityRepository, CommunityMemberRepository communityMemberRepository) {
+    public CommunityServiceImpl(CommunityRepository communityRepository, CommunityMemberRepository communityMemberRepository) {
         this.communityRepository = communityRepository;
         this.communityMemberRepository = communityMemberRepository;
     }
@@ -68,7 +72,7 @@ public class ComunityServiceImpl implements CommunityService {
         Community community = communityRepository.findById(communityId).orElse(null);
 
         if( community == null ) {
-            throw new NotFoundException("Community not found");
+            throw new NotFoundException(MSG_COMMUNITY_NOT_FOUND);
         }
 
         return mapToDTO(community);
@@ -78,7 +82,7 @@ public class ComunityServiceImpl implements CommunityService {
     public CommunityResponse createCommunity(CommunityRequest communityRequest, Account account) {
 
         if (!isNameAvailable(communityRequest.getName())) {
-            throw new RuntimeException("Community name already exists");
+            throw new RuntimeException(MSG_COMMUNITY_NAME_EXISTS);
         }
 
         Community community = new Community();

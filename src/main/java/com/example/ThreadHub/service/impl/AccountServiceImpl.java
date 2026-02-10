@@ -21,6 +21,23 @@ import java.util.UUID;
 
 @Service
 public class AccountServiceImpl implements AccountService {
+
+    /* ===================== CONSTANT MESSAGES ===================== */
+    private static final String MSG_USERNAME_TAKEN = "Username is taken";
+    private static final String MSG_EMAIL_TAKEN = "Email is taken";
+    private static final String MSG_INVALID_TOKEN = "Invalid token";
+    private static final String MSG_VERIFICATION_LINK_EXPIRED = "Verification link expired. Please request a new verification email.";
+    private static final String MSG_OLD_PASSWORD_INCORRECT = "Old password is incorrect";
+    private static final String MSG_NEW_PASSWORD_MISMATCH = "New password and repeat new password must be the same";
+    private static final String MSG_INVALID_LOGIN = "Invalid username or password";
+    private static final String MSG_EMAIL_NOT_FOUND = "Email not found";
+    private static final String MAIL_SUBJECT_VERIFY = "Verify your email";
+    private static final String MAIL_SUBJECT_RESET_PASSWORD = "Reset your password";
+    private static final String MAIL_VERIFY_TEXT_PREFIX = "Click the link to verify your account: ";
+    private static final String MAIL_RESET_PASSWORD_TEXT = "Your password has been change to: %s\nplease use this password to login and change it in your profile";
+    private static final String VERIFY_URL_PREFIX = "http://localhost:8080/api/auth/verify?token=";
+    /* ============================================================= */
+
     private final JavaMailSender javaMailSender;
     private final AccountRepository accountRepository;
 
@@ -43,13 +60,10 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void register(RegisterRequest registerRequest) {
         if (!isUsernameAvailable(registerRequest.getUsername())) {
-            throw new ConflictException("Username is taken");
+            throw new ConflictException(MSG_USERNAME_TAKEN);
         }
         if (!isEmailAvailable(registerRequest.getEmail())) {
-            throw new ConflictException("Email is taken");
-        }
-        if (!registerRequest.getPassword().equals(registerRequest.getRepeatPassword())) {
-            throw new ConflictException("Password and repeat password must be the same");
+            throw new ConflictException(MSG_EMAIL_TAKEN);
         }
 
         Account account = new Account();
@@ -60,21 +74,18 @@ public class AccountServiceImpl implements AccountService {
         account.setAccountStatus(AccountStatus.ACTIVE);
         account.setEmailVerified(false);
 
-        // Generate token
         String token = UUID.randomUUID().toString();
         account.setEmailVerificationToken(token);
         account.setEmailVerificationTokenSentAt(LocalDateTime.now());
 
         accountRepository.save(account);
 
-        // Prepare verification link
-        String verifyLink = "http://localhost:8080/api/auth/verify?token=" + token;
+        String verifyLink = VERIFY_URL_PREFIX + token;
 
-        // Send email verification
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(account.getEmail());
-        message.setSubject("Verify your email");
-        message.setText("Click the link to verify your account: " + verifyLink);
+        message.setSubject(MAIL_SUBJECT_VERIFY);
+        message.setText(MAIL_VERIFY_TEXT_PREFIX + verifyLink);
         javaMailSender.send(message);
     }
 
@@ -82,24 +93,21 @@ public class AccountServiceImpl implements AccountService {
     public void resendVerificationEmail(String token) {
         Account account = accountRepository.findByEmailVerificationToken(token);
         if (account == null) {
-            throw new NotFoundException("");
+            throw new NotFoundException(MSG_INVALID_TOKEN);
         }
 
-        // Generate token
         String newToken = UUID.randomUUID().toString();
         account.setEmailVerificationToken(newToken);
         account.setEmailVerificationTokenSentAt(LocalDateTime.now());
 
         accountRepository.save(account);
 
-        // Prepare verification link
-        String verifyLink = "http://localhost:8080/api/auth/verify?token=" + newToken;
+        String verifyLink = VERIFY_URL_PREFIX + newToken;
 
-        // Send email verification
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(account.getEmail());
-        message.setSubject("Verify your email");
-        message.setText("Click the link to verify your account: " + verifyLink);
+        message.setSubject(MAIL_SUBJECT_VERIFY);
+        message.setText(MAIL_VERIFY_TEXT_PREFIX + verifyLink);
         javaMailSender.send(message);
     }
 
@@ -107,29 +115,27 @@ public class AccountServiceImpl implements AccountService {
     public void verifyEmail(String token) {
         Account account = accountRepository.findByEmailVerificationToken(token);
         if (account == null) {
-            throw new NotFoundException("Invalid token");
+            throw new NotFoundException(MSG_INVALID_TOKEN);
         }
 
         LocalDateTime sentDate = account.getEmailVerificationTokenSentAt();
         if (sentDate == null || sentDate.isBefore(LocalDateTime.now().minusHours(24))) {
-            throw new ConflictException("Verification link expired. Please request a new verification email.");
+            throw new ConflictException(MSG_VERIFICATION_LINK_EXPIRED);
         }
 
         account.setEmailVerified(true);
-        account.setEmailVerificationToken(null); // clear token
+        account.setEmailVerificationToken(null);
         accountRepository.save(account);
     }
 
     @Override
     public void changePassword(Account account, String newPassword, String repeatNewPassword) {
-        // validate old password
         if (!PasswordHasher.hash(newPassword).equals(account.getPassword())) {
-            throw new ConflictException("Old password is incorrect");
+            throw new ConflictException(MSG_OLD_PASSWORD_INCORRECT);
         }
 
-        // validate repeat password
         if (!newPassword.equals(repeatNewPassword)) {
-            throw new ConflictException("New password and repeat new password must be the same");
+            throw new ConflictException(MSG_NEW_PASSWORD_MISMATCH);
         }
 
         account.setPassword(PasswordHasher.hash(newPassword));
@@ -140,7 +146,7 @@ public class AccountServiceImpl implements AccountService {
     public String login(String username, String password) {
         Account account = accountRepository.findByUsername(username);
         if (account == null || !PasswordHasher.hash(password).equals(account.getPassword())) {
-            throw new NotFoundException("Invalid username or password");
+            throw new NotFoundException(MSG_INVALID_LOGIN);
         }
 
         return JwtUtil.generateToken(account);
@@ -154,18 +160,19 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void forgotPassword(String email) {
         Account account = accountRepository.findByEmail(email);
-        if (account == null)
-            throw new NotFoundException("Email not found");
+        if (account == null) {
+            throw new NotFoundException(MSG_EMAIL_NOT_FOUND);
+        }
 
         String newPassword = RandomPassword.generate();
         account.setPassword(PasswordHasher.hash(newPassword));
         accountRepository.save(account);
 
-        // Send email verification
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
-        message.setSubject("Reset your password");
-        message.setText("Your password has been change to: " + newPassword + "\n please use this password to login and change it in your profile");
+        message.setSubject(MAIL_SUBJECT_RESET_PASSWORD);
+        message.setText(String.format(MAIL_RESET_PASSWORD_TEXT, newPassword));
         javaMailSender.send(message);
     }
 }
+

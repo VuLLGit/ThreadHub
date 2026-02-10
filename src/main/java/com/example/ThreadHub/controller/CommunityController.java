@@ -24,11 +24,18 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/communities")
 public class CommunityController {
 
+    /* ===== MESSAGE CONSTANTS ===== */
+    private static final String MSG_AUTH_NULL = "Authentication is null";
+    private static final String MSG_JOIN_COMMUNITY_SUCCESS = "Joined community successfully";
+    private static final String MSG_LEAVE_COMMUNITY_SUCCESS = "Left community successfully";
+    private static final String MSG_FORBIDDEN_ACTION = "You are not allowed to perform this action";
+
     private final CommunityService communityService;
     private final CommunityMemberService communityMemberService;
 
     @Autowired
-    public CommunityController(CommunityService communityService, CommunityMemberService communityMemberService) {
+    public CommunityController(CommunityService communityService,
+                               CommunityMemberService communityMemberService) {
         this.communityService = communityService;
         this.communityMemberService = communityMemberService;
     }
@@ -38,7 +45,8 @@ public class CommunityController {
                                                @RequestParam(defaultValue = "10") int size,
                                                @RequestParam(defaultValue = "createdAt") String sortBy,
                                                @RequestParam(defaultValue = "") String search) {
-        Page<CommunityResponse> communities = communityService.getAllCommunities(page, size, sortBy, search);
+        Page<CommunityResponse> communities =
+                communityService.getAllCommunities(page, size, sortBy, search);
 
         return ResponseEntity.ok(communities);
     }
@@ -46,29 +54,32 @@ public class CommunityController {
     @GetMapping("/my")
     public ResponseEntity<?> getMyCommunities(Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
 
-        return ResponseEntity.ok().body(communityService.getAllCommunitiesByAccountId(account.getId()));
+        return ResponseEntity.ok(
+                communityService.getAllCommunitiesByAccountId(account.getId())
+        );
     }
 
     @GetMapping("/{communityId}")
     public ResponseEntity<?> getCommunityById(@PathVariable Long communityId) {
-        CommunityResponse communityResponse = communityService.getCommunityById(communityId);
+        CommunityResponse communityResponse =
+                communityService.getCommunityById(communityId);
         return ResponseEntity.ok(communityResponse);
     }
 
     @PostMapping("/create")
     public ResponseEntity<?> createCommunity(@Valid @RequestBody CommunityRequest communityRequest,
                                              Authentication authentication) {
-        // validate authentication
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
 
-        CommunityResponse communityResponse = communityService.createCommunity(communityRequest, account);
+        CommunityResponse communityResponse =
+                communityService.createCommunity(communityRequest, account);
         return ResponseEntity.ok(communityResponse);
     }
 
@@ -76,24 +87,24 @@ public class CommunityController {
     public ResponseEntity<?> joinCommunity(@PathVariable Long communityId,
                                            Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
 
         communityMemberService.joinCommunity(communityId, account.getId());
-        return ResponseEntity.ok().body("Joined community successfully");
+        return ResponseEntity.ok(MSG_JOIN_COMMUNITY_SUCCESS);
     }
 
     @DeleteMapping("/{communityId}/leave")
     public ResponseEntity<?> leaveCommunity(@PathVariable Long communityId,
                                             Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
 
         communityMemberService.leaveCommunity(communityId, account.getId());
-        return ResponseEntity.ok().body("Left community successfully");
+        return ResponseEntity.ok(MSG_LEAVE_COMMUNITY_SUCCESS);
     }
 
     // Moderator actions
@@ -103,16 +114,23 @@ public class CommunityController {
                                                  @PathVariable Long communityId,
                                                  Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
-        CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
+        CommunityMember actorCommunityMember =
+                communityMemberService.findByCommunityIdAndAccountId(
+                        communityId, account.getId()
+                );
 
-        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && (!actorCommunityMember.getMemberRole().equals(MemberRole.OWNER))) {
-            throw new ForbiddenException("You are not allowed to perform this action");
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR)
+                && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)) {
+            throw new ForbiddenException(MSG_FORBIDDEN_ACTION);
         }
 
-        Page<CommunityMemberResponse> communityMembers = communityMemberService.getCommunityMembers(page, size, "createdAt", communityId);
+        Page<CommunityMemberResponse> communityMembers =
+                communityMemberService.getCommunityMembers(
+                        page, size, "createdAt", communityId
+                );
 
         return ResponseEntity.ok(communityMembers);
     }
@@ -122,16 +140,21 @@ public class CommunityController {
                                              @PathVariable Long communityId,
                                              Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
-        CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
+        CommunityMember actorCommunityMember =
+                communityMemberService.findByCommunityIdAndAccountId(
+                        communityId, account.getId()
+                );
 
-        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
-            throw new ForbiddenException("You are not allowed to perform this action");
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR)
+                && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)) {
+            throw new ForbiddenException(MSG_FORBIDDEN_ACTION);
         }
 
-        CommunityMemberResponse communityMemberResponse = communityMemberService.assignModerator(communityMemberId);
+        CommunityMemberResponse communityMemberResponse =
+                communityMemberService.assignModerator(communityMemberId);
 
         return ResponseEntity.ok(communityMemberResponse);
     }
@@ -141,16 +164,20 @@ public class CommunityController {
                                              @PathVariable Long communityId,
                                              Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
-        CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
+        CommunityMember actorCommunityMember =
+                communityMemberService.findByCommunityIdAndAccountId(
+                        communityId, account.getId()
+                );
 
-        if (!actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
-            throw new ForbiddenException("You are not allowed to perform this action");
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)) {
+            throw new ForbiddenException(MSG_FORBIDDEN_ACTION);
         }
 
-        CommunityMemberResponse communityMemberResponse = communityMemberService.removeModerator(communityMemberId);
+        CommunityMemberResponse communityMemberResponse =
+                communityMemberService.removeModerator(communityMemberId);
 
         return ResponseEntity.ok(communityMemberResponse);
     }
@@ -160,16 +187,22 @@ public class CommunityController {
                                            @PathVariable Long communityId,
                                            Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
-        CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
+        CommunityMember actorCommunityMember =
+                communityMemberService.findByCommunityIdAndAccountId(
+                        communityId, account.getId()
+                );
 
-        if (!actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
-            throw new ForbiddenException("You are not allowed to perform this action");
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)) {
+            throw new ForbiddenException(MSG_FORBIDDEN_ACTION);
         }
 
-        CommunityMemberResponse communityMemberResponse = communityMemberService.transferOwner(actorCommunityMember.getId(), communityMemberId);
+        CommunityMemberResponse communityMemberResponse =
+                communityMemberService.transferOwner(
+                        actorCommunityMember.getId(), communityMemberId
+                );
 
         return ResponseEntity.ok(communityMemberResponse);
     }
@@ -179,16 +212,21 @@ public class CommunityController {
                                            Authentication authentication,
                                            @Valid @RequestBody CommunityRequest communityRequest) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
-        CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
+        CommunityMember actorCommunityMember =
+                communityMemberService.findByCommunityIdAndAccountId(
+                        communityId, account.getId()
+                );
 
-        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
-            throw new ForbiddenException("You are not allowed to perform this action");
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR)
+                && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)) {
+            throw new ForbiddenException(MSG_FORBIDDEN_ACTION);
         }
 
-        CommunityResponse communityResponse = communityService.editCommunity(communityRequest, communityId);
+        CommunityResponse communityResponse =
+                communityService.editCommunity(communityRequest, communityId);
 
         return ResponseEntity.ok(communityResponse);
     }
@@ -197,16 +235,21 @@ public class CommunityController {
     public ResponseEntity<?> inactiveCommunity(@PathVariable Long communityId,
                                                Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
-        CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
+        CommunityMember actorCommunityMember =
+                communityMemberService.findByCommunityIdAndAccountId(
+                        communityId, account.getId()
+                );
 
-        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
-            throw new ForbiddenException("You are not allowed to perform this action");
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR)
+                && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)) {
+            throw new ForbiddenException(MSG_FORBIDDEN_ACTION);
         }
 
-        CommunityResponse communityResponse = communityService.inactivateCommunity(communityId);
+        CommunityResponse communityResponse =
+                communityService.inactivateCommunity(communityId);
 
         return ResponseEntity.ok(communityResponse);
     }
@@ -215,16 +258,21 @@ public class CommunityController {
     public ResponseEntity<?> activeCommunity(@PathVariable Long communityId,
                                              Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
         Account account = (Account) authentication.getPrincipal();
-        CommunityMember actorCommunityMember = communityMemberService.findByCommunityIdAndAccountId(communityId, account.getId());
+        CommunityMember actorCommunityMember =
+                communityMemberService.findByCommunityIdAndAccountId(
+                        communityId, account.getId()
+                );
 
-        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR) && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)){
-            throw new ForbiddenException("You are not allowed to perform this action");
+        if (!actorCommunityMember.getMemberRole().equals(MemberRole.MODERATOR)
+                && !actorCommunityMember.getMemberRole().equals(MemberRole.OWNER)) {
+            throw new ForbiddenException(MSG_FORBIDDEN_ACTION);
         }
 
-        CommunityResponse communityResponse = communityService.activateCommunity(communityId);
+        CommunityResponse communityResponse =
+                communityService.activateCommunity(communityId);
 
         return ResponseEntity.ok(communityResponse);
     }

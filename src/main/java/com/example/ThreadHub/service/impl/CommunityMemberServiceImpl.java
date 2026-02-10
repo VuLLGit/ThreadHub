@@ -24,6 +24,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CommunityMemberServiceImpl implements CommunityMemberService {
 
+    /* ===================== CONSTANT MESSAGES ===================== */
+    private static final String MSG_MEMBER_NOT_FOUND = "Cannot find member";
+    private static final String MSG_COMMUNITY_NOT_FOUND = "Community not found";
+    private static final String MSG_COMMUNITY_INACTIVE = "Community is inactive";
+    private static final String MSG_ALREADY_MEMBER = "You are already a member of this community";
+    private static final String MSG_NOT_A_MEMBER = "You are not a member of this community";
+    private static final String MSG_OWNER_MUST_TRANSFER = "You need to transfer Owner before leaving community";
+    /* ============================================================= */
+
     private final CommunityMemberRepository communityMemberRepository;
     private final CommunityRepository communityRepository;
     private final AccountRepository accountRepository;
@@ -67,7 +76,7 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
 
     public CommunityMemberResponse assignModerator(Long communityMemberId) {
         if(!isMemberExist(communityMemberId)){
-            throw new NotFoundException("cannot find member");
+            throw new NotFoundException(MSG_MEMBER_NOT_FOUND);
         }
         CommunityMember communityMember = communityMemberRepository.findById(communityMemberId).orElseThrow();
         communityMember.setMemberRole(MemberRole.MODERATOR);
@@ -78,7 +87,7 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
     @Override
     public CommunityMemberResponse removeModerator(Long communityMemberId) {
         if(!isMemberExist(communityMemberId)){
-            throw new NotFoundException("cannot find member");
+            throw new NotFoundException(MSG_MEMBER_NOT_FOUND);
         }
         CommunityMember communityMember = communityMemberRepository.findById(communityMemberId).orElseThrow();
         communityMember.setMemberRole(MemberRole.MEMBER);
@@ -90,7 +99,7 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
     @Override
     public CommunityMemberResponse transferOwner(Long actorCommunityMemberId, Long newOwnerCommunityMemberId) {
         if(!isMemberExist(newOwnerCommunityMemberId)){
-            throw new NotFoundException("cannot find member");
+            throw new NotFoundException(MSG_MEMBER_NOT_FOUND);
         }
         CommunityMember newOwnerCommunityMember = communityMemberRepository.findById(newOwnerCommunityMemberId).orElseThrow();
         newOwnerCommunityMember.setMemberRole(MemberRole.OWNER);
@@ -110,15 +119,15 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
         Account account = accountRepository.findById(accountId).orElse(null);
 
         if (community == null) {
-            throw new RuntimeException("Community not found");
+            throw new RuntimeException(MSG_COMMUNITY_NOT_FOUND);
         }
 
         if (community.getCommunityStatus() == CommunityStatus.INACTIVE) {
-            throw new RuntimeException("Community is inactive");
+            throw new RuntimeException(MSG_COMMUNITY_INACTIVE);
         }
 
         if (actorCommunityMember != null) {
-            throw new RuntimeException("You are already a member of this community");
+            throw new RuntimeException(MSG_ALREADY_MEMBER);
         }
 
         CommunityMember communityMember = new CommunityMember();
@@ -135,11 +144,11 @@ public class CommunityMemberServiceImpl implements CommunityMemberService {
         CommunityMember communityMember = communityMemberRepository.findByCommunityIdAndAccountId(communityId, accountId);
 
         if (communityMember == null) {
-            throw new RuntimeException("You are not a member of this community");
+            throw new RuntimeException(MSG_NOT_A_MEMBER);
         }
 
         if (communityMember.getMemberRole() == MemberRole.OWNER) {
-            throw new RuntimeException("You need to transfer Owner before leaving community");
+            throw new RuntimeException(MSG_OWNER_MUST_TRANSFER);
         }
 
         communityMemberRepository.delete(communityMember);

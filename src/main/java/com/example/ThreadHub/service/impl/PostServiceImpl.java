@@ -28,6 +28,19 @@ import java.util.UUID;
 @Service
 public class PostServiceImpl implements PostService {
 
+    /* ===================== CONSTANTS ===================== */
+    private static final String MSG_POST_NOT_FOUND = "Post not found";
+    private static final String MSG_NO_PERMISSION_EDIT = "You don't have permission to edit this post";
+    private static final String MSG_NO_PERMISSION_INACTIVE = "You don't have permission to inactive this post";
+    private static final String MSG_NO_PERMISSION_ACTIVE = "You don't have permission to active this post";
+    private static final String MSG_NO_PERMISSION_DELETE = "You don't have permission to delete this post";
+    private static final String MSG_UPLOAD_S3_FAILED = "Failed to upload to S3";
+    private static final String S3_BUCKET_NAME = "threadhub";
+    private static final String S3_POST_FOLDER = "posts/";
+    private static final String S3_PUBLIC_URL_PREFIX = "https://threadhub.s3.ap-southeast-2.amazonaws.com/";
+    private static final String S3_POST_URL_PREFIX = "https://threadhub.s3.ap-southeast-2.amazonaws.com/Posts/";
+    /* ===================================================== */
+
     private final PostRepository postRepository;
     private final CommunityRepository communityRepository;
     private final S3Client s3Client;
@@ -39,7 +52,7 @@ public class PostServiceImpl implements PostService {
         this.s3Client = s3Client;
     }
 
-    //lưu file lên S3
+    // lưu file lên S3
     private String saveFileToS3(MultipartFile file, String folder) {
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
         String key = folder + fileName;
@@ -47,26 +60,26 @@ public class PostServiceImpl implements PostService {
         try {
             s3Client.putObject(
                     PutObjectRequest.builder()
-                            .bucket("threadhub")
+                            .bucket(S3_BUCKET_NAME)
                             .key(key)
                             .contentType(file.getContentType())
                             .build(),
-                    software.amazon.awssdk.core.sync.RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+                    software.amazon.awssdk.core.sync.RequestBody
+                            .fromInputStream(file.getInputStream(), file.getSize())
             );
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload to S3", e);
+            throw new RuntimeException(MSG_UPLOAD_S3_FAILED, e);
         }
 
-        return "https://threadhub.s3.ap-southeast-2.amazonaws.com/" + key;
+        return S3_PUBLIC_URL_PREFIX + key;
     }
 
     private void deleteFileFromS3(String url) {
-        String prefix = "https://threadhub.s3.ap-southeast-2.amazonaws.com/Posts/";
-        String key = url.replace(prefix, "");
+        String key = url.replace(S3_POST_URL_PREFIX, "");
 
         s3Client.deleteObject(
                 DeleteObjectRequest.builder()
-                        .bucket("threadhub")
+                        .bucket(S3_BUCKET_NAME)
                         .key(key)
                         .build()
         );
@@ -83,7 +96,7 @@ public class PostServiceImpl implements PostService {
         postResponse.setAccountUsername(post.getAccount().getUsername());
         postResponse.setAccountAvatarUrl(post.getAccount().getAvatarUrl());
 
-        if(post.getMedias() != null) {
+        if (post.getMedias() != null) {
             List<String> mediaUrls = new ArrayList<>();
             for (Media media : post.getMedias()) {
                 mediaUrls.add(media.getUrl());
@@ -95,7 +108,7 @@ public class PostServiceImpl implements PostService {
 
     private void saveMedias(Post post, List<MultipartFile> files, List<Media> mediaList) {
         for (MultipartFile file : files) {
-            String url = saveFileToS3(file, "posts/");
+            String url = saveFileToS3(file, S3_POST_FOLDER);
 
             Media media = new Media();
             media.setUrl(url);
@@ -133,7 +146,8 @@ public class PostServiceImpl implements PostService {
         if (search == null || search.isBlank()) {
             posts = postRepository.findAllByCommunityId(communityId, pageable);
         } else {
-            posts = postRepository.findAllSearchedPostsInCommunity(communityId, search.trim(), pageable);
+            posts = postRepository.findAllSearchedPostsInCommunity(
+                    communityId, search.trim(), pageable);
         }
 
         return posts.map(this::mapToDto);
@@ -142,8 +156,8 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse getPostById(Long postId) {
         Post post = postRepository.findById(postId).orElse(null);
-        if(post == null) {
-            throw new NotFoundException("Post not found");
+        if (post == null) {
+            throw new NotFoundException(MSG_POST_NOT_FOUND);
         }
         return mapToDto(post);
     }
@@ -151,6 +165,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse createPost(PostRequest postRequest, Account account, Long communityId) {
         Community community = communityRepository.findById(communityId).orElse(null);
+
         Post post = new Post();
         post.setTitle(postRequest.getTitle());
         post.setContent(postRequest.getContent());
@@ -164,8 +179,8 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse uploadFilesToPost(Long postId, List<MultipartFile> files) {
         Post post = postRepository.findById(postId).orElse(null);
-        if(post == null) {
-            throw new NotFoundException("Post not found");
+        if (post == null) {
+            throw new NotFoundException(MSG_POST_NOT_FOUND);
         }
 
         List<Media> mediaList = new ArrayList<>();
@@ -183,12 +198,12 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse editPost(Account account, Long postId, PostRequest postRequest) {
         Post post = postRepository.findById(postId).orElse(null);
-        if(post == null) {
-            throw new NotFoundException("Post not found");
+        if (post == null) {
+            throw new NotFoundException(MSG_POST_NOT_FOUND);
         }
 
         if (!post.getAccount().getId().equals(account.getId())) {
-            throw new RuntimeException("You don't have permission to edit this post");
+            throw new RuntimeException(MSG_NO_PERMISSION_EDIT);
         }
 
         post.setTitle(postRequest.getTitle());
@@ -199,17 +214,17 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse editFilesFromPost(Account account, Long postId, List<MultipartFile> files) {
         Post post = postRepository.findById(postId).orElse(null);
-        if(post == null) {
-            throw new NotFoundException("Post not found");
+        if (post == null) {
+            throw new NotFoundException(MSG_POST_NOT_FOUND);
         }
 
         if (!post.getAccount().getId().equals(account.getId())) {
-            throw new RuntimeException("You don't have permission to edit this post");
+            throw new RuntimeException(MSG_NO_PERMISSION_EDIT);
         }
+
         List<Media> mediaList = new ArrayList<>();
 
         if (files != null && !files.isEmpty()) {
-
             for (Media media : post.getMedias()) {
                 deleteFileFromS3(media.getUrl());
             }
@@ -227,13 +242,14 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse inactivePost(Account account, Long postId) {
         Post post = postRepository.findById(postId).orElse(null);
-        if(post == null) {
-            throw new NotFoundException("Post not found");
+        if (post == null) {
+            throw new NotFoundException(MSG_POST_NOT_FOUND);
         }
 
         if (!post.getAccount().getId().equals(account.getId())) {
-            throw new RuntimeException("You don't have permission to inactive this post");
+            throw new RuntimeException(MSG_NO_PERMISSION_INACTIVE);
         }
+
         post.setPostStatus(PostStatus.INACTIVE);
         return mapToDto(postRepository.save(post));
     }
@@ -241,27 +257,29 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostResponse activePost(Account account, Long postId) {
         Post post = postRepository.findById(postId).orElse(null);
-        if(post == null) {
-            throw new NotFoundException("Post not found");
+        if (post == null) {
+            throw new NotFoundException(MSG_POST_NOT_FOUND);
         }
 
         if (!post.getAccount().getId().equals(account.getId())) {
-            throw new RuntimeException("You don't have permission to active this post");
+            throw new RuntimeException(MSG_NO_PERMISSION_ACTIVE);
         }
+
         post.setPostStatus(PostStatus.ACTIVE);
         return mapToDto(postRepository.save(post));
     }
-    
+
     @Override
-    public void deletePost(Account account,Long postId) {
+    public void deletePost(Account account, Long postId) {
         Post post = postRepository.findById(postId).orElse(null);
-        if(post == null) {
-            throw new NotFoundException("Post not found");
+        if (post == null) {
+            throw new NotFoundException(MSG_POST_NOT_FOUND);
         }
 
         if (!post.getAccount().getId().equals(account.getId())) {
-            throw new RuntimeException("You don't have permission to delete this post");
+            throw new RuntimeException(MSG_NO_PERMISSION_DELETE);
         }
+
         postRepository.delete(post);
         postRepository.flush();
     }

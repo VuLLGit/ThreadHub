@@ -23,6 +23,9 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
+    /* ===== MESSAGE CONSTANTS ===== */
+    private static final String MSG_AUTH_NULL = "Authentication object is null";
+    private static final String MSG_POST_DELETED = "post deleted";
 
     CommunityService communityService;
     PostService postService;
@@ -64,7 +67,7 @@ public class PostController {
                                         Authentication authentication) {
 
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication object is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
 
         Account account = (Account) authentication.getPrincipal();
@@ -87,7 +90,7 @@ public class PostController {
                                       @Valid @RequestBody PostRequest postRequest,
                                       Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication object is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
 
         Account account = (Account) authentication.getPrincipal();
@@ -102,7 +105,7 @@ public class PostController {
                                            @RequestPart(value = "files", required = false) List<MultipartFile> files,
                                            Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication object is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
 
         Account account = (Account) authentication.getPrincipal();
@@ -114,7 +117,7 @@ public class PostController {
     public ResponseEntity<?> inactivePost(@PathVariable Long postId,
                                           Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication object is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
 
         Account account = (Account) authentication.getPrincipal();
@@ -126,7 +129,7 @@ public class PostController {
     public ResponseEntity<?> activePost(@PathVariable Long postId,
                                         Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication object is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
 
         Account account = (Account) authentication.getPrincipal();
@@ -138,12 +141,12 @@ public class PostController {
     public ResponseEntity<?> deletePost(@PathVariable Long postId,
                                         Authentication authentication) {
         if (authentication == null) {
-            throw new UnauthorizedException("Authentication object is null");
+            throw new UnauthorizedException(MSG_AUTH_NULL);
         }
 
         Account account = (Account) authentication.getPrincipal();
 
         postService.deletePost(account, postId);
-        return ResponseEntity.ok().body("post deleted");
+        return ResponseEntity.ok().body(MSG_POST_DELETED);
     }
 }
