@@ -5,6 +5,7 @@ import com.example.ThreadHub.dto.response.PostResponse;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Community;
 import com.example.ThreadHub.entity.Post;
+import com.example.ThreadHub.exception.UnauthorizedException;
 import com.example.ThreadHub.service.CommunityService;
 import com.example.ThreadHub.service.PostService;
 import jakarta.validation.Valid;
@@ -26,8 +27,8 @@ public class PostController {
     CommunityService communityService;
     PostService postService;
 
-    public PostController(CommunityService comunityService, PostService postService) {
-        this.communityService = comunityService;
+    public PostController(CommunityService communityService, PostService postService) {
+        this.communityService = communityService;
         this.postService = postService;
     }
 
@@ -60,21 +61,13 @@ public class PostController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createPost(@Valid @RequestBody PostRequest postRequest,
-                                        Authentication authentication,
-                                        BindingResult bindingResult) {
+                                        Authentication authentication) {
 
         if (authentication == null) {
-            return ResponseEntity.status(401).body("unauthorized");
+            throw new UnauthorizedException("Authentication object is null");
         }
 
         Account account = (Account) authentication.getPrincipal();
-
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> error.getDefaultMessage())
-                    .collect(Collectors.joining(", "));
-            return ResponseEntity.badRequest().body(errorMessage);
-        }
 
         PostResponse postResponse = postService.createPost(postRequest, account, postRequest.getCommunityId());
 
@@ -92,20 +85,12 @@ public class PostController {
     @PatchMapping("/{postId}/edit")
     public ResponseEntity<?> editPost(@PathVariable Long postId,
                                       @Valid @RequestBody PostRequest postRequest,
-                                      BindingResult bindingResult,
                                       Authentication authentication) {
         if (authentication == null) {
-            return ResponseEntity.status(401).body("unauthorized");
+            throw new UnauthorizedException("Authentication object is null");
         }
 
         Account account = (Account) authentication.getPrincipal();
-
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getAllErrors().stream()
-                    .map(error -> error.getDefaultMessage())
-                    .collect(Collectors.joining(", "));
-            return ResponseEntity.badRequest().body(errorMessage);
-        }
 
         PostResponse postResponse = postService.editPost(account, postId, postRequest);
 
@@ -117,7 +102,7 @@ public class PostController {
                                            @RequestPart(value = "files", required = false) List<MultipartFile> files,
                                            Authentication authentication) {
         if (authentication == null) {
-            return ResponseEntity.status(401).body("unauthorized");
+            throw new UnauthorizedException("Authentication object is null");
         }
 
         Account account = (Account) authentication.getPrincipal();
@@ -129,7 +114,7 @@ public class PostController {
     public ResponseEntity<?> inactivePost(@PathVariable Long postId,
                                           Authentication authentication) {
         if (authentication == null) {
-            return ResponseEntity.status(401).body("unauthorized");
+            throw new UnauthorizedException("Authentication object is null");
         }
 
         Account account = (Account) authentication.getPrincipal();
@@ -141,7 +126,7 @@ public class PostController {
     public ResponseEntity<?> activePost(@PathVariable Long postId,
                                         Authentication authentication) {
         if (authentication == null) {
-            return ResponseEntity.status(401).body("unauthorized");
+            throw new UnauthorizedException("Authentication object is null");
         }
 
         Account account = (Account) authentication.getPrincipal();
@@ -153,7 +138,7 @@ public class PostController {
     public ResponseEntity<?> deletePost(@PathVariable Long postId,
                                         Authentication authentication) {
         if (authentication == null) {
-            return ResponseEntity.status(401).body("unauthorized");
+            throw new UnauthorizedException("Authentication object is null");
         }
 
         Account account = (Account) authentication.getPrincipal();

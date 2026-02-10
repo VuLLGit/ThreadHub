@@ -4,7 +4,7 @@ import com.example.ThreadHub.dto.request.RegisterRequest;
 import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.enums.AccountRole;
 import com.example.ThreadHub.entity.enums.AccountStatus;
-import com.example.ThreadHub.exception.BusinessException;
+import com.example.ThreadHub.exception.ConflictException;
 import com.example.ThreadHub.exception.NotFoundException;
 import com.example.ThreadHub.repository.AccountRepository;
 import com.example.ThreadHub.service.AccountService;
@@ -12,7 +12,6 @@ import com.example.ThreadHub.util.JwtUtil;
 import com.example.ThreadHub.util.PasswordHasher;
 import com.example.ThreadHub.util.RandomPassword;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
@@ -44,13 +43,13 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void register(RegisterRequest registerRequest) {
         if (!isUsernameAvailable(registerRequest.getUsername())) {
-            throw new BusinessException("Username is taken");
+            throw new ConflictException("Username is taken");
         }
         if (!isEmailAvailable(registerRequest.getEmail())) {
-            throw new BusinessException("Email is taken");
+            throw new ConflictException("Email is taken");
         }
         if (!registerRequest.getPassword().equals(registerRequest.getRepeatPassword())) {
-            throw new BusinessException("Password and repeat password must be the same");
+            throw new ConflictException("Password and repeat password must be the same");
         }
 
         Account account = new Account();
@@ -113,7 +112,7 @@ public class AccountServiceImpl implements AccountService {
 
         LocalDateTime sentDate = account.getEmailVerificationTokenSentAt();
         if (sentDate == null || sentDate.isBefore(LocalDateTime.now().minusHours(24))) {
-            throw new BusinessException("Verification link expired. Please request a new verification email.");
+            throw new ConflictException("Verification link expired. Please request a new verification email.");
         }
 
         account.setEmailVerified(true);
@@ -125,12 +124,12 @@ public class AccountServiceImpl implements AccountService {
     public void changePassword(Account account, String newPassword, String repeatNewPassword) {
         // validate old password
         if (!PasswordHasher.hash(newPassword).equals(account.getPassword())) {
-            throw new BusinessException("Old password is incorrect");
+            throw new ConflictException("Old password is incorrect");
         }
 
         // validate repeat password
         if (!newPassword.equals(repeatNewPassword)) {
-            throw new BusinessException("New password and repeat new password must be the same");
+            throw new ConflictException("New password and repeat new password must be the same");
         }
 
         account.setPassword(PasswordHasher.hash(newPassword));
