@@ -9,6 +9,7 @@ import com.example.ThreadHub.exception.UnauthorizedException;
 import com.example.ThreadHub.service.CommunityService;
 import com.example.ThreadHub.service.PostService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,11 +28,10 @@ public class PostController {
     private static final String MSG_AUTH_NULL = "Authentication object is null";
     private static final String MSG_POST_DELETED = "post deleted";
 
-    CommunityService communityService;
-    PostService postService;
+    private final PostService postService;
 
-    public PostController(CommunityService communityService, PostService postService) {
-        this.communityService = communityService;
+    @Autowired
+    public PostController(PostService postService) {
         this.postService = postService;
     }
 
