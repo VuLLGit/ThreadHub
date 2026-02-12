@@ -6,6 +6,7 @@ import com.example.ThreadHub.entity.Account;
 import com.example.ThreadHub.entity.Comment;
 import com.example.ThreadHub.entity.Post;
 import com.example.ThreadHub.entity.enums.CommentStatus;
+import com.example.ThreadHub.exception.BadRequestException;
 import com.example.ThreadHub.exception.ForbiddenException;
 import com.example.ThreadHub.exception.NotFoundException;
 import com.example.ThreadHub.repository.CommentRepository;
@@ -22,6 +23,7 @@ public class CommentServiceImpl implements CommentService {
     private static final String MSG_POST_NOT_FOUND="post not found";
     private static final String MSG_COMMENT_NOT_FOUND="comment not found";
     private static final String MSG_FORBIDDEN="not have permission";
+    private static final String MSG_BAD_REQUEST = "bad request";
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
@@ -103,6 +105,9 @@ public class CommentServiceImpl implements CommentService {
         }
         if (!comment.getAccount().getId().equals(account.getId())) {
             throw new ForbiddenException(MSG_FORBIDDEN);
+        }
+        if (!comment.getPost().getId().equals(postId)) {
+            throw new BadRequestException(MSG_BAD_REQUEST);
         }
         commentRepository.delete(comment);
     }

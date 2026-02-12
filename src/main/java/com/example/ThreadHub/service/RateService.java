@@ -4,7 +4,10 @@ import com.example.ThreadHub.dto.response.RateResponse;
 import com.example.ThreadHub.entity.Account;
 
 public interface RateService {
-    RateResponse CreatePositiveRate(Long postId, Account account);
-    RateResponse CreateNegativeRate(Long postId, Account account);
-    void deleteRate(Long postId, Account account);
+    RateResponse CreatePositivePostRate(Long postId, Account account);
+    RateResponse CreateNegativePostRate(Long postId, Account account);
+    RateResponse CreatePositiveCommentRate(Long postId, Long commentId, Account account);
+    RateResponse CreateNegativeCommentRate(Long postId, Long commentId, Account account);
+    void deletePostRate(Long postId, Long rateId, Account account);
+    void deleteCommentRate(Long postId, Long commentId, Long rateId, Account account);
 }
